@@ -63,7 +63,7 @@ Segment a few slices per volume, see example below:
 Extract 2D slices from each of the 3D volume, where labels are present, and generate a new folder that will be used for training the nnUNet model:
 
 ~~~
-python extract_slices.py --path-data /path/to/bids/data --label-folder derivatives/labels --path-out /path/to/nnunet_raw
+python extract_slices.py --path-data /path/to/bids/data --label-folder derivatives/labels --labels SC GM lesion --path-out /path/to/nnunet_raw
 ~~~
 
 ### Crop images
