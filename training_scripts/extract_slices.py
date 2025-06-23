@@ -22,8 +22,12 @@ from time import time
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Extract annotated slices from dataset.')
+    # Mandatory arguments
     parser.add_argument('--path-data', required=True, help='Path to BIDS structured dataset.')
+    parser.add_argument('--labels', nargs='+', required=True,
+                    help='List of label types to extract (e.g., SC GM lesion)')
     parser.add_argument('--path-out', required=True, help='Path to output directory.')
+    # Optional arguments
     parser.add_argument('--label-folder', default='derivatives/labels',
                         help='Relative path to the label folder inside the dataset.')
     return parser.parse_args()
@@ -40,14 +44,14 @@ def find_files(folder, extension='.nii.gz'):
     return []
 
 
-def get_available_labels(label_folder, base_name):
-    return {
-        label_type: f.path
-        for f in os.scandir(label_folder)
-        if f.name.endswith('.nii.gz') and base_name in f.name
-        for label_type in ['SC', 'GM', 'lesion']
-        if label_type in f.name
-    }
+def get_available_labels(label_folder, base_name, expected_labels):
+    available = {}
+    for f in os.scandir(label_folder):
+        if f.name.endswith('.nii.gz') and base_name in f.name:
+            for label in expected_labels:
+                if f'label-{label}' in f.name or f'_{label}_' in f.name:
+                    available[label] = f.path
+    return available
 
 
 def extract_modality_from_filename(filename):
@@ -64,7 +68,7 @@ def save_nifti_slice(data, affine, out_path):
     save(img, str(out_path))
 
 
-def process_subject(mri_path, label_base_path, output_images_dir, output_labels_dir):
+def process_subject(mri_path, label_base_path, output_images_dir, output_labels_dir, expected_labels):
     folder_name = Path(mri_path).name
     print(f"Processing {folder_name}...")
     files = find_files(mri_path)
@@ -84,37 +88,36 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
         save_nifti_slice(mri_data, mri_img.affine, out_anat_path / file_name)
 
         label_folder = label_base_path / folder_name / 'anat'
-        label_paths = get_available_labels(label_folder, base_name)
+        label_paths = get_available_labels(label_folder, base_name, expected_labels)
 
-        if 'SC' not in label_paths:
-            return count  # Skip if no SC label (could be extended to other criteria)
+        if not all(label in label_paths for label in expected_labels):
+            return count  # Skip if any expected label is missing
 
         label_data = {
-            k: (load(v), np.asarray(load(v).dataobj))
-            for k, v in label_paths.items()
+            label: (load(label_paths[label]), np.asarray(load(label_paths[label]).dataobj))
+            for label in expected_labels
         }
 
-        nb_slices = label_data['SC'][1].shape[1]
+        nb_slices = label_data[expected_labels[0]][1].shape[1]
         for slice_i in range(nb_slices):
-            if np.sum(label_data['SC'][1][:, slice_i, :]) == 0:
-                continue  # Skip non-annotated slices
+            if np.sum(label_data[expected_labels[0]][1][:, slice_i, :]) == 0:
+                continue
 
             count += 1
             slice_out_path = output_labels_dir / folder_name / 'anat'
             slice_out_path.mkdir(parents=True, exist_ok=True)
 
-            # Save MRI slice
             mri_slice = mri_data[:, slice_i, :]
             mri_out_name = f'{subject}_{chunk}-slice-{slice_i}_{modality}.nii.gz'
             save_nifti_slice(mri_slice, mri_img.affine, out_anat_path / mri_out_name)
 
-            # Save label slices
-            for label_type, (img_obj, data) in label_data.items():
-                label_slice = data[:, slice_i, :]
-                label_filename = f'{subject}_{chunk}-slice-{slice_i}_{modality}_label-{label_type}_seg.nii.gz'
-                save_nifti_slice(label_slice, img_obj.affine, slice_out_path / label_filename)
+            for label in expected_labels:
+                label_slice = label_data[label][1][:, slice_i, :]
+                label_filename = f'{subject}_{chunk}-slice-{slice_i}_{modality}_label-{label}_seg.nii.gz'
+                save_nifti_slice(label_slice, label_data[label][0].affine, slice_out_path / label_filename)
 
     return count
+
 
 
 def main():
@@ -131,7 +134,7 @@ def main():
     total_count = 0
     for folder_path in find_subject_folders(path_data):
         t0 = time()
-        total_count += process_subject(folder_path, path_labels, path_out_images, path_out_labels)
+        total_count += process_subject(folder_path, path_labels, path_out_images, path_out_labels, args.labels)
         print(f"Done {Path(folder_path).name} in {time() - t0:.1f}s")
 
     print(f'--- Finished: extracted {total_count} slices ---')
