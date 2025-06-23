@@ -3,7 +3,7 @@
 Here, we detail all the steps necessary to train and use an nnUNet model for the segmentation of mouse SC WM an GM. 
 The steps detail how to :
 - [Setup environment](#setup-environment)
-- preprocess the data
+- [Prepare data](#prepare-data)
 - train the model
 - performing inference
 
@@ -33,6 +33,33 @@ pip install -r requirements.txt
 
 Download dataset (internal git-annex at NeuroPoly): `TODO`
 
+The dataset is organized according to BIDS:
+
+```
+├── derivatives
+│   └── labels
+│       └── sub-01
+│           └── anat
+│               ├── sub-01_part-mag_chunk-02_T2starw_label-GM_seg.nii.gz
+│               ├── sub-01_part-mag_chunk-02_T2starw_label-lesion_seg.nii.gz
+│               └── sub-01_part-mag_chunk-02_T2starw_label-SC_seg.nii.gz
+└── sub-01
+    └── anat
+        ├── sub-01_part-mag_chunk-02_T2starw.nii.gz
+        └── sub-01_part-phase_chunk-02_T2starw.nii.gz
+```
+
+### Manual annotation
+
+Segment a few slices per volume, see example below:
+
+![](../doc/pic_sc.png)
+![](../doc/pic_gm.png)
+![](../doc/pic_lesion.png)
+![](../doc/export.png)
+
+### Create nnUNet folders
+
 Create the following folders:
 
 ~~~
@@ -46,7 +73,7 @@ mkdir nnUNet_results
 Extract slices from the original file (dimension (500,500,200)) and their label, and create a new file (dimesion (500,500,1)) in another dataset folder:
 
 ~~~
-python ./utils/extract_slices.py --path-data /path/to/data --path-out /path/to/project/folder
+python extract_slices.py --path-data /path/to/data --path-out /path/to/project/folder
 ~~~
 
 ### Crop images
