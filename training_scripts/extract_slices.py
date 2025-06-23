@@ -70,16 +70,14 @@ def save_nifti_slice(data, affine, out_path):
 
 def process_subject(mri_path, label_base_path, output_images_dir, output_labels_dir, expected_labels):
     folder_name = Path(mri_path).name
-    print(f"Processing {folder_name}...")
     files = find_files(mri_path)
     count = 0
+    slice_log = []
 
     for file_path in files:
         file_name = Path(file_path).name
         base_name = file_name.replace('.nii.gz', '')
-        subject, chunk = base_name.split('_')[:2]
-        modality = extract_modality_from_filename(file_name)
-
+        subject = base_name.split('_')[0]  # e.g., sub-01
         mri_img = load(file_path)
         mri_data = np.asarray(mri_img.dataobj)
 
@@ -91,7 +89,7 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
         label_paths = get_available_labels(label_folder, base_name, expected_labels)
 
         if not all(label in label_paths for label in expected_labels):
-            return count  # Skip if any expected label is missing
+            return count, []
 
         label_data = {
             label: (load(label_paths[label]), np.asarray(load(label_paths[label]).dataobj))
@@ -104,6 +102,8 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
                 continue
 
             count += 1
+            slice_log.append(slice_i)
+
             slice_out_path = output_labels_dir / folder_name / 'anat'
             slice_out_path.mkdir(parents=True, exist_ok=True)
 
@@ -116,8 +116,10 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
                 label_filename = f"{base_name}_slice-{slice_i}_label-{label}_seg.nii.gz"
                 save_nifti_slice(label_slice, label_data[label][0].affine, slice_out_path / label_filename)
 
-    return count
+            print(f"\r- {subject}: {', '.join(map(str, slice_log))}", end='', flush=True)
 
+    print()  # Newline after subject
+    return count, slice_log
 
 
 def main():
@@ -132,12 +134,15 @@ def main():
     path_out_labels.mkdir(parents=True, exist_ok=True)
 
     total_count = 0
+    print("Extracting slices:")
     for folder_path in find_subject_folders(path_data):
         t0 = time()
-        total_count += process_subject(folder_path, path_labels, path_out_images, path_out_labels, args.labels)
-        print(f"Done {Path(folder_path).name} in {time() - t0:.1f}s")
+        count, slice_indices = process_subject(
+            folder_path, path_labels, path_out_images, path_out_labels, args.labels
+        )
+        total_count += count
 
-    print(f'--- Finished: extracted {total_count} slices ---')
+    print(f'\nDone! Number of extracted slices: {total_count}')
 
 
 if __name__ == '__main__':
