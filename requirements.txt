@@ -1,0 +1,6 @@
+nnunetv2
+torch
+nibabel
+torchvision
+numpy
+tqdm
