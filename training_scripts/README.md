@@ -58,12 +58,20 @@ Segment a few slices per volume, see example below:
 ![](../doc/pic_lesion.png)
 ![](../doc/export.png)
 
+### Convert labels to one-hot encoder
+
+Because of the need to create single file with one-hot encoder for nnUnetv2 (more details here #2), we need a script to combine manually segmented SC, GM and lesion into:
+
+~~~
+combine_labels.py
+~~~
+
 ### Extract slices
 
 Extract 2D slices from each of the 3D volume, where labels are present, and generate a new folder that will be used for training the nnUNet model:
 
 ~~~
-python extract_slices.py --path-data /path/to/bids/data --label-folder derivatives/labels --labels SC GM lesion --path-out /path/to/nnunet_raw
+python extract_slices.py --path-data /path/to/bids/data --label-folder derivatives/labels --labels SC GM lesion --path-out /path/to/bids/data_slice
 ~~~
 
 ### Crop images
@@ -76,7 +84,8 @@ python ./utils/crop_image_and_mask.py --folder-path /path/to/folder/  --file-nam
 
 ### Convert from BIDS to nnU-Net file structure
 
-Before using the nnU-Net model, we convert the dataset from the BIDS format to the nnU-Net fornat:
+Before using the nnU-Net model, we convert the dataset from the BIDS format to the nnUNetv2 fornat, which notably:
+- Merges all segmentation binary files into a single file, giving a specific integer value to each class.
 
 ~~~
 python ./utils/convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID
