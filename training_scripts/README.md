@@ -58,22 +58,12 @@ Segment a few slices per volume, see example below:
 ![](../doc/pic_lesion.png)
 ![](../doc/export.png)
 
-### Create nnUNet folders
-
-Create the following folders:
-
-~~~
-mkdir nnUNet_raw
-mkdir nnUNet_preprocessed
-mkdir nnUNet_results
-~~~
-
 ### Extract slices
 
-Extract slices from the original file (dimension (500,500,200)) and their label, and create a new file (dimesion (500,500,1)) in another dataset folder:
+Extract 2D slices from each of the 3D volume, where labels are present, and generate a new folder that will be used for training the nnUNet model:
 
 ~~~
-python extract_slices.py --path-data /path/to/data --path-out /path/to/project/folder
+python extract_slices.py --path-data /path/to/bids/data --path-out /path/to/nnunet_raw
 ~~~
 
 ### Crop images
