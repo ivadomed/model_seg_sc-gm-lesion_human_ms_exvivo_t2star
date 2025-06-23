@@ -108,12 +108,12 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
             slice_out_path.mkdir(parents=True, exist_ok=True)
 
             mri_slice = mri_data[:, slice_i, :]
-            mri_out_name = f'{subject}_{chunk}-slice-{slice_i}_{modality}.nii.gz'
+            mri_out_name = f"{base_name}_slice-{slice_i}.nii.gz"
             save_nifti_slice(mri_slice, mri_img.affine, out_anat_path / mri_out_name)
 
             for label in expected_labels:
                 label_slice = label_data[label][1][:, slice_i, :]
-                label_filename = f'{subject}_{chunk}-slice-{slice_i}_{modality}_label-{label}_seg.nii.gz'
+                label_filename = f"{base_name}_slice-{slice_i}_label-{label}_seg.nii.gz"
                 save_nifti_slice(label_slice, label_data[label][0].affine, slice_out_path / label_filename)
 
     return count
