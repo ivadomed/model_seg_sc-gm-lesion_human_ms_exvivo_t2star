@@ -1,14 +1,9 @@
-"""
-Combine segmentation labels for SC, GM and lesions from multiple files into a single NIfTI file.
-This script processes label files in a BIDS structured dataset, combining them based on the presence of
-lesions and the type of tissue (SC or GM). It saves the combined labels in a new directory structure.
-"""
-
 import os
 import nibabel as nib
 import numpy as np
 from pathlib import Path
 from collections import defaultdict
+import argparse
 
 LABEL_VALUES = {
     "background": 0,
@@ -17,6 +12,15 @@ LABEL_VALUES = {
     "gm_wo_lesion": 3,
     "gm_with_lesion": 4,
 }
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Combine SC, GM, and lesion labels into one multi-class label file.")
+    parser.add_argument("--path-label-in", required=True,
+                        help="Path to the root of the label derivatives folder (e.g. derivatives/labels)")
+    parser.add_argument("--path-label-out", required=True,
+                        help="Path to save the combined label masks (e.g. derivatives/combined_labels)")
+    return parser.parse_args()
+
 
 def find_label_sets(label_dir):
     label_sets = defaultdict(dict)
@@ -30,7 +34,7 @@ def find_label_sets(label_dir):
 def combine_labels(label_dict, output_path, reference_image_path=None):
     required = {"SC", "GM", "lesion"}
     if not required.issubset(label_dict.keys()):
-        print(f"❌ Missing one or more required labels in {label_dict}")
+        print(f"❌ Missing one or more required labels in: {label_dict}")
         return
 
     data = {k: (nib.load(p).get_fdata() > 0).astype(np.uint8) for k, p in label_dict.items()}
@@ -43,17 +47,6 @@ def combine_labels(label_dict, output_path, reference_image_path=None):
     combined = np.zeros(shape, dtype=np.uint8)
 
     lesion_mask = data["lesion"]
-    # check if lesion mask has non-zero values
-    if np.sum(lesion_mask) == 0:
-        print(f"⚠️ No lesions found in {output_path}, skipping lesion labels.")
-        lesion_mask = np.zeros(shape, dtype=np.uint8)
-    else:
-        print(f"✅ Found lesions in {output_path}, combining lesion labels.")
-        # display coordinates of lesion mask
-        lesion_coords = np.argwhere(lesion_mask)
-        if lesion_coords.size > 0:
-            print(f"Lesion coordinates: {lesion_coords[:5]}... (showing first 5)")  
-    
     gm_mask = data["GM"]
     wm_mask = np.logical_and(data["SC"], np.logical_not(gm_mask))
 
@@ -63,12 +56,13 @@ def combine_labels(label_dict, output_path, reference_image_path=None):
     combined[np.logical_and(gm_mask, lesion_mask)] = LABEL_VALUES["gm_with_lesion"]
 
     nib.save(nib.Nifti1Image(combined, affine, header), output_path)
-    print(f"✅ Saved combined label: {output_path}")
+    print(f"✅ Saved: {output_path}")
 
 
 def main():
-    input_root = Path("/Users/julien/data/Postmortem_SC_MRI/Processed_BIDS/derivatives/labels")
-    output_root = input_root.parent / "combined_labels"
+    args = parse_args()
+    input_root = Path(args.path_label_in)
+    output_root = Path(args.path_label_out)
 
     for subject_dir in input_root.glob("sub-*"):
         input_anat = subject_dir / "anat"
@@ -78,16 +72,20 @@ def main():
         label_sets = find_label_sets(input_anat)
 
         for base_name, label_dict in label_sets.items():
-            if not {"GM", "SC"}.issubset(label_dict):
-                print(f"⚠️ Skipping {base_name} (missing GM or SC)")
+            if not {"GM", "SC", "lesion"}.issubset(label_dict.keys()):
+                print(f"⚠️ Skipping {base_name} (missing one or more required labels)")
                 continue
+
             output_file = output_anat / f"{base_name}_label-combined_seg.nii.gz"
 
-            # Try to find the original MRI to use for affine/header
-            ref_image = (input_root.parent / subject_dir.name / "anat" / f"{base_name}.nii.gz")
-            if not ref_image.exists():
-                ref_image = None
-            combine_labels(label_dict, output_file, ref_image)
+            # Try to find the original image
+            ref_image_path = (
+                input_root.parent.parent / subject_dir.name / "anat" / f"{base_name}.nii.gz"
+            )
+            ref_image_path = ref_image_path if ref_image_path.exists() else None
+
+            combine_labels(label_dict, output_file, ref_image_path)
+
 
 if __name__ == "__main__":
     main()

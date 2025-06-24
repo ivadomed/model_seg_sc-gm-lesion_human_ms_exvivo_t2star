@@ -62,6 +62,16 @@ Segment a few slices per volume, see example below:
 
 Because of the need to create single file with one-hot encoder for nnUnetv2 (more details here #2), we need a script to combine manually segmented SC, GM and lesion into:
 
+```json
+"labels": {
+    "background": 0,
+    "white matter without lesion": 1,
+    "white matter with lesion": 2,
+    "gray matter without lesion": 3,
+    "gray matter with lesion": 4
+}
+```
+
 ~~~
 combine_labels.py
 ~~~
