@@ -91,21 +91,14 @@ Extract 2D slices from each of the 3D volume, where labels are present, and gene
 python extract_slices.py --path-data ${PATH_DATA} --label-folder derivatives/labels_combined --labels combined --path-out ${PATH_DATA}_slice
 ~~~
 
-### Crop images
-
-Crop images and their respective mask in order to remove certain slices: 
-
-~~~
-python ./utils/crop_image_and_mask.py --folder-path /path/to/folder/  --file-name file_name.nii.gz --first-slice XXX --last-slice XXX
-~~~
-
 ### Convert from BIDS to nnU-Net file structure
 
-Before using the nnU-Net model, we convert the dataset from the BIDS format to the nnUNetv2 fornat, which notably:
-- Merges all segmentation binary files into a single file, giving a specific integer value to each class.
+To be able to use nnU-Net trainer, we need to convert the file structure, notably:
+- Rename and organize files according to train/test sets
+- Create the descriptor `data.json`
 
 ~~~
-python ./utils/convert_bids_to_nnunet.py --path-data /path/to/data_extracted --path-out /path/to/nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID
+python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice --path-out ${PATH_DATA}_nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID
 ~~~
 
 This will output a dataset called `DatasetDATASET-ID_TASK-NAME` in the `/nnUNet_raw` folder. (DATASET-ID has to be between 100 and 999).
