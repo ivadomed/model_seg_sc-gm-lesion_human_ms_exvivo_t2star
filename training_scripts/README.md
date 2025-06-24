@@ -36,6 +36,7 @@ Download dataset (internal git-annex at NeuroPoly): `TODO`
 The dataset is organized according to BIDS:
 
 ```
+DATASET
 ├── derivatives
 │   └── labels
 │       └── sub-01
@@ -48,6 +49,12 @@ The dataset is organized according to BIDS:
         ├── sub-01_part-mag_chunk-02_T2starw.nii.gz
         └── sub-01_part-phase_chunk-02_T2starw.nii.gz
 ```
+
+Let's define some SHELL variables for convenience:
+
+~~~
+PATH_DATA="<PATH_TO_DATASET>"
+~~~
 
 ### Manual annotation
 
@@ -73,7 +80,7 @@ Because of the need to create single file with one-hot encoder for nnUnetv2 (mor
 ```
 
 ~~~
-combine_labels.py
+python combine_labels.py --path-label-in ${PATH_DATA}/derivatives/labels --path-label-out ${PATH_DATA}/derivatives/labels_combined
 ~~~
 
 ### Extract slices
@@ -81,7 +88,7 @@ combine_labels.py
 Extract 2D slices from each of the 3D volume, where labels are present, and generate a new folder that will be used for training the nnUNet model:
 
 ~~~
-python extract_slices.py --path-data /path/to/bids/data --label-folder derivatives/labels --labels SC GM lesion --path-out /path/to/bids/data_slice
+python extract_slices.py --path-data ${PATH_DATA} --label-folder derivatives/labels_combined --labels combined --path-out ${PATH_DATA}_slice
 ~~~
 
 ### Crop images
