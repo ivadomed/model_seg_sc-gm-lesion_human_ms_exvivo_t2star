@@ -47,12 +47,30 @@ import nibabel as nib
 from batchgenerators.utilities.file_and_folder_operations import maybe_mkdir_p
 from nnunetv2.dataset_conversion.generate_dataset_json import generate_dataset_json
 
+
 def ensure_3d_and_save(src_path: Path, dst_path: Path):
     img = nib.load(str(src_path))
     data = np.asarray(img.dataobj)
+
+    # Force data to 3D
     if data.ndim == 2:
-        data = data[:, :, np.newaxis]  # make it (H, W, 1)
-    nib.save(nib.Nifti1Image(data, img.affine, img.header), str(dst_path))
+        data = data[:, :, np.newaxis]  # (H, W) → (H, W, 1)
+    elif data.ndim == 4 and data.shape[-1] == 1:
+        data = data[:, :, :, 0]  # drop 4th dim if singleton
+
+    # Reorient: ensure the slice axis is first (Z, Y, X)
+    if data.shape[1] == 1:  # likely (X, 1, Z)
+        data = np.transpose(data, (2, 1, 0))  # → (Z, 1, X)
+    elif data.shape[2] == 1:  # likely (X, Y, 1)
+        data = np.transpose(data, (1, 2, 0))  # → (Y, 1, X)
+    elif data.shape[0] == 1:
+        data = np.transpose(data, (1, 0, 2))  # → (Y, Z, X) — edge case
+    elif data.shape[0] < data.shape[1] and data.shape[0] < data.shape[2]:
+        # If first axis is smallest, likely slice is misplaced
+        data = np.transpose(data, (1, 2, 0))  # put slice axis first
+
+    nib.save(nib.Nifti1Image(data.astype(np.float32), img.affine, img.header), str(dst_path))
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Convert BIDS-style dataset into nnUNet v2 format (slice-based).")
@@ -62,6 +80,7 @@ def parse_args():
     parser.add_argument("--taskname", default="Segmentation", help="Task name. Default: Segmentation")
     parser.add_argument("--tasknumber", type=int, default=502, help="Task number. Default: 502")
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -122,6 +141,7 @@ def main():
     )
 
     print(f"\n📁 Finished structuring {sample_count} samples into: {output_base}")
+
 
 if __name__ == "__main__":
     main()
