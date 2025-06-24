@@ -103,26 +103,14 @@ python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice
 
 This will output a dataset called `Dataset502_Segmentation` in the `${PATH_DATA}_slice_nnunet_raw` folder.
 
-
-
-### Convert from nnU-Net file structure to BIDS
-
-After using an nnU-Net, if you want to convert back to the BIDS format, run:
-
-~~~
-python ./utils/convert_nnunet_to_bids.py --path-conversion-dict /PATH/TO/DICT --path-segmentation-folder /PATH/SEG --path-dataset /PATH/DATASET --mask-name MASK_NAME
-~~~
-
-This will output a dataset add a segmentation `mask_name` in the dataset derivatives.
-
 ### nnUNet data preprocessing
 
 Before training the model, nnU-Net performs data preprocessing and checks the integrity of the dataset:
 
 ~~~
-export nnUNet_raw="/path/to/nnUNet_raw"
-export nnUNet_preprocessed="/path/to/nnUNet_preprocessed"
-export nnUNet_results="/path/to/nnUNet_results"
+export nnUNet_raw="${PATH_DATA}_slice_nnunet_raw"
+export nnUNet_preprocessed="${PATH_DATA}_slice_nnunet_preprocessed"
+export nnUNet_results="${PATH_DATA}_slice_nnunet_results"
 
 nnUNetv2_plan_and_preprocess -d DATASET-ID --verify_dataset_integrity
 ~~~
