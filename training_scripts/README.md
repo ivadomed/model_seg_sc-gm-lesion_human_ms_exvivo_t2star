@@ -96,6 +96,7 @@ python extract_slices.py --path-data ${PATH_DATA} --label-folder derivatives/lab
 To be able to use nnU-Net trainer, we need to convert the file structure, notably:
 - Rename and organize files according to train/test sets
 - Create the descriptor `data.json`
+- Convert files to 3D NIfTI objects (even though these are single slice), to address #6.
 
 ~~~
 python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice
@@ -105,31 +106,35 @@ This will output a dataset called `Dataset502_Segmentation` in the `${PATH_DATA}
 
 ### nnUNet data preprocessing
 
-Before training the model, nnU-Net performs data preprocessing and checks the integrity of the dataset:
+Before training the model, nnUNet performs data preprocessing and checks the integrity of the dataset:
 
 ~~~
 export nnUNet_raw="${PATH_DATA}_slice_nnunet_raw"
 export nnUNet_preprocessed="${PATH_DATA}_slice_nnunet_preprocessed"
 export nnUNet_results="${PATH_DATA}_slice_nnunet_results"
 
-nnUNetv2_plan_and_preprocess -d DATASET-ID --verify_dataset_integrity
+nnUNetv2_plan_and_preprocess -d <DATASET_ID> --verify_dataset_integrity
 ~~~
 
 You will get the configuration plan for all four configurations (2d, 3d_fullres, 3d_lowres, 3d_cascade_fullres).
-> [!NOTE] 
-> In the case of the zurich_mouse dataset, nifti files are not fully annotated, therefore we use a 2d configuration.
 
+> [!NOTE] 
+> In the case of this dataset, nifti files are not fully annotated, therefore we use a 2d configuration.
 
 ## Train model
 
 To train the model, use the following command:
-~~~
-CUDA_VISIBLE_DEVICES=XXX nnUNetv2_train DATASET-ID CONFIG FOLD --npz
-~~~
-> [!NOTE] 
-> Example for Dataset 101, on 2d config on fold 0: CUDA_VISIBLE_DEVICES=2 nnUNetv2_train 101 2d 0 --npz
 
-You can track the progress of the model with: 
+~~~
+CUDA_VISIBLE_DEVICES=<GPU_ID> nnUNetv2_train <DATASET_ID> <CONFIG_FOLD> --npz
+~~~
+
+Example:
+~~~
+CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz
+~~~
+
+Track training progress:
 ~~~
 nnUNet_results/DatasetDATASET-ID_TASK-NAME/nnUNetTrainer__nnUNetPlans__CONFIG/fold_FOLD/progress.png
 ~~~
