@@ -101,10 +101,9 @@ To be able to use nnU-Net trainer, we need to convert the file structure, notabl
 python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice
 ~~~
 
-This will output a dataset called `DatasetDATASET-ID_TASK-NAME` in the `/nnUNet_raw` folder. (DATASET-ID has to be between 100 and 999).
+This will output a dataset called `Dataset502_Segmentation` in the `${PATH_DATA}_slice_nnunet_raw` folder.
 
-> [!NOTE] 
-> In the `convert_bids_to_nnunet` script, all the labeled data is used for training and the unlabeled-data is used for inference.
+
 
 ### Convert from nnU-Net file structure to BIDS
 
