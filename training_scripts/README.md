@@ -98,7 +98,7 @@ To be able to use nnU-Net trainer, we need to convert the file structure, notabl
 - Create the descriptor `data.json`
 
 ~~~
-python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice --path-out ${PATH_DATA}_nnUNet_raw --taskname TASK-NAME --tasknumber DATASET-ID
+python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice
 ~~~
 
 This will output a dataset called `DatasetDATASET-ID_TASK-NAME` in the `/nnUNet_raw` folder. (DATASET-ID has to be between 100 and 999).
