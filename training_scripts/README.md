@@ -126,12 +126,12 @@ You will get the configuration plan for all four configurations (2d, 3d_fullres,
 To train the model, use the following command:
 
 ~~~
-CUDA_VISIBLE_DEVICES=<GPU_ID> nnUNetv2_train <DATASET_ID> <CONFIG_FOLD> --npz
+CUDA_VISIBLE_DEVICES=<GPU_ID> nnUNetv2_train <DATASET_ID> <FOLD> <CONFIG_FOLD> --npz -device <DEVICE>
 ~~~
 
 Example:
 ~~~
-CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz
+CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz -device cuda
 ~~~
 
 Track training progress:
