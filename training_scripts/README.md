@@ -121,6 +121,14 @@ You will get the configuration plan for all four configurations (2d, 3d_fullres,
 > [!NOTE] 
 > In the case of this dataset, nifti files are not fully annotated, therefore we use a 2d configuration.
 
+## Optional: Copy nnUNet custom trainer for WanDB monitoring
+
+~~~
+cp nnUNetTrainerWandb.py ../venv/lib/python3.13/site-packages/nnunetv2/training/nnUNetTrainer/variants/
+~~~
+
+And add the flag `-tr nnUNetTrainerWandb` to the `nnUNetv2_train` command (see next section).
+
 ## Train model
 
 To train the model, use the following command:
@@ -131,13 +139,16 @@ CUDA_VISIBLE_DEVICES=<GPU_ID> nnUNetv2_train <DATASET_ID> <FOLD> <CONFIG_FOLD> -
 
 Example:
 ~~~
-CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz -device cuda
+CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz -device cuda -tr nnUNetTrainerWandb
 ~~~
 
 Track training progress:
 ~~~
 nnUNet_results/DatasetDATASET-ID_TASK-NAME/nnUNetTrainer__nnUNetPlans__CONFIG/fold_FOLD/progress.png
 ~~~
+
+
+
 
 ## Running inference
 

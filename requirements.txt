@@ -4,3 +4,4 @@ nibabel
 torchvision
 numpy
 tqdm
+wandb
