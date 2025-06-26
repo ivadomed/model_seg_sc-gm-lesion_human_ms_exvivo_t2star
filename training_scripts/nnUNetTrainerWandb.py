@@ -69,8 +69,18 @@ class nnUNetTrainerWandb(nnUNetTrainer):
 
             if batch_id == 0: 
                 train_image= data[0].detach().cpu().squeeze().float().numpy()
-                train_gt= target[0].detach().cpu().squeeze().float().numpy()[0]
-                train_pred = np.argmax(output[0].detach().cpu().squeeze().numpy(), axis=1)[0]                
+                
+                # Deal with region-based training
+                if target[0].shape[1] == 1:
+                    # Not region-based, just squeeze the class dimension
+                    train_gt = target[0].detach().cpu().squeeze().float().numpy()[0]
+                    train_pred = np.argmax(output[0].detach().cpu().squeeze().numpy(), axis=1)[0]                
+                else:
+                    # Region-based, we need to sum all classes along the class dimension
+                    train_gt = target[0].detach().cpu().squeeze().float().numpy()[0]
+                    train_gt = np.squeeze(np.sum(train_gt, axis=0))  # Sum across classes to get a single mask and squeeze it
+                    train_pred = output[0].detach().cpu().squeeze().float().numpy()[0]
+                    train_pred = np.squeeze(np.sum(train_pred, axis=0))  # Sum across classes to get a single mask and squeeze it
                 fig = plot_single_slice(combined=train_image, gt=train_gt, pred=train_pred)
                 wandb.log({"training images": wandb.Image(fig)})
                 plt.close(fig)

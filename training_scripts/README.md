@@ -142,7 +142,7 @@ CUDA_VISIBLE_DEVICES=<GPU_ID> nnUNetv2_train <DATASET_ID> <FOLD> <CONFIG_FOLD> -
 
 Example:
 ~~~
-CUDA_VISIBLE_DEVICES=0 nnUNetv2_train 502 2d 0 --npz -device cuda -tr nnUNetTrainerWandb
+nnUNetv2_train 502 2d 0 --npz -device mps -tr nnUNetTrainerWandb
 ~~~
 
 Track training progress:
