@@ -64,7 +64,8 @@ def extract_modality_from_filename(filename):
 
 
 def save_nifti_slice(data, affine, out_path):
-    img = Nifti1Image(data, affine)
+    dtype = np.uint8 if np.array_equal(data, data.astype(int)) else np.float32
+    img = Nifti1Image(data.astype(dtype), affine)
     save(img, str(out_path))
 
 
