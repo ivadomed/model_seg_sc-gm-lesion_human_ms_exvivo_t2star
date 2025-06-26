@@ -1,91 +1,111 @@
+"""
+combine_labels_modular.py
+
+A general-purpose tool for combining multiple overlapping segmentation labels
+(e.g., spinal cord, gray matter, lesion) into a single non-overlapping multi-class label map,
+with user-defined logic for label relationships (such as label inclusion/subset constraints).
+
+- Accepts any set of label suffixes and their prior inclusion logic.
+- Automatically generates all valid, mutually exclusive label combinations.
+- Produces a combined multi-class NIfTI file and a JSON mapping class names to integer labels.
+
+Usage example:
+    python combine_labels_modular.py \
+        --input derivatives/labels/sub-01/anat/ \
+        --output combined_labels.nii.gz \
+        --suffixes SC GM lesion \
+        --priors GM:SC lesion:SC \
+        --json LABEL_VALUES.json
+"""
+
 import os
 import nibabel as nib
 import numpy as np
 from pathlib import Path
-from collections import defaultdict
 import argparse
-
-LABEL_VALUES = {
-    "background": 0,
-    "wm_wo_lesion": 1,
-    "wm_with_lesion": 2,
-    "gm_wo_lesion": 3,
-    "gm_with_lesion": 4,
-}
+import json
+import itertools
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Combine SC, GM, and lesion labels into one multi-class label file.")
-    parser.add_argument("--path-label-in", required=True,
-                        help="Path to the root of the label derivatives folder (e.g. derivatives/labels)")
-    parser.add_argument("--path-label-out", required=True,
-                        help="Path to save the combined label masks (e.g. derivatives/combined_labels)")
+    parser = argparse.ArgumentParser(description="Combine labels into a multi-class label file, with flexible logic.")
+    parser.add_argument("--input", required=True, help="Path to folder containing label NIfTI files.")
+    parser.add_argument("--output", required=True, help="Output path for combined label NIfTI file.")
+    parser.add_argument("--suffixes", nargs="+", required=True, help="List of label suffixes (e.g., SC GM lesion).")
+    parser.add_argument("--priors", nargs="*", default=[], help="List of 'CHILD:PARENT' (e.g., GM:SC lesion:SC).")
+    parser.add_argument("--json", required=True, help="Output path for JSON mapping.")
     return parser.parse_args()
 
+def load_labels(label_dir, suffixes):
+    # Assumes files named *_label-<suffix>_seg.nii.gz
+    label_arrays = {}
+    for suffix in suffixes:
+        matches = list(Path(label_dir).glob(f"*label-{suffix}_seg.nii.gz"))
+        if not matches:
+            raise FileNotFoundError(f"Could not find label file for suffix '{suffix}' in {label_dir}")
+        arr = (nib.load(str(matches[0])).get_fdata() > 0).astype(np.uint8)
+        label_arrays[suffix] = arr
+    return label_arrays
 
-def find_label_sets(label_dir):
-    label_sets = defaultdict(dict)
-    for path in Path(label_dir).rglob("*_label-*_seg.nii.gz"):
-        base_prefix = path.name.split('_label-')[0]
-        label_type = path.name.split('_label-')[1].split('_')[0]
-        label_sets[base_prefix][label_type] = path
-    return label_sets
+def generate_combinations(label_names, priors):
+    # priors is a list of (child, parent)
+    all_combos = list(itertools.product([0, 1], repeat=len(label_names)))
+    valid_combos = []
+    for combo in all_combos:
+        state = dict(zip(label_names, combo))
+        valid = True
+        for child, parent in priors:
+            if state[child] and not state[parent]:
+                valid = False
+                break
+        # Optionally skip pure background (all 0s)
+        valid_combos.append(combo) if valid else None
+    return valid_combos
 
+def human_readable_class(combo, label_names):
+    present = [name for i, name in enumerate(label_names) if combo[i]]
+    absent = [name for i, name in enumerate(label_names) if not combo[i]]
+    if not present:
+        return "background"
+    return "_".join(present) + ("_without_" + "_".join(absent) if absent else "")
 
-def combine_labels(label_dict, output_path, reference_image_path=None):
-    required = {"SC", "GM", "lesion"}
-    if not required.issubset(label_dict.keys()):
-        print(f"❌ Missing one or more required labels in: {label_dict}")
-        return
-
-    data = {k: (nib.load(p).get_fdata() > 0).astype(np.uint8) for k, p in label_dict.items()}
-    ref_path = reference_image_path or list(label_dict.values())[0]
-    ref_nib = nib.load(str(ref_path))
-    shape = ref_nib.shape
-    affine = ref_nib.affine
-    header = ref_nib.header
-
-    combined = np.zeros(shape, dtype=np.uint8)
-
-    lesion_mask = data["lesion"]
-    gm_mask = data["GM"]
-    wm_mask = np.logical_and(data["SC"], np.logical_not(gm_mask))
-
-    combined[np.logical_and(wm_mask, np.logical_not(lesion_mask))] = LABEL_VALUES["wm_wo_lesion"]
-    combined[np.logical_and(wm_mask, lesion_mask)] = LABEL_VALUES["wm_with_lesion"]
-    combined[np.logical_and(gm_mask, np.logical_not(lesion_mask))] = LABEL_VALUES["gm_wo_lesion"]
-    combined[np.logical_and(gm_mask, lesion_mask)] = LABEL_VALUES["gm_with_lesion"]
-
-    nib.save(nib.Nifti1Image(combined, affine, header), output_path)
-    print(f"✅ Saved: {output_path}")
-
+def build_label_masks(label_arrays, combinations, label_names):
+    ref_shape = next(iter(label_arrays.values())).shape
+    final = np.zeros(ref_shape, dtype=np.uint8)
+    class_dict = {}
+    class_idx = 1  # 0 is background
+    for combo in combinations:
+        mask = np.ones(ref_shape, dtype=bool)
+        class_str = human_readable_class(combo, label_names)
+        for idx, present in enumerate(combo):
+            name = label_names[idx]
+            mask &= (label_arrays[name] > 0) if present else (label_arrays[name] == 0)
+        # Background stays zero
+        if class_str == "background":
+            class_dict[class_str] = 0
+            continue
+        class_dict[class_str] = class_idx
+        final[mask] = class_idx
+        class_idx += 1
+    return final, class_dict
 
 def main():
     args = parse_args()
-    input_root = Path(args.path_label_in)
-    output_root = Path(args.path_label_out)
-
-    for subject_dir in input_root.glob("sub-*"):
-        input_anat = subject_dir / "anat"
-        output_anat = output_root / subject_dir.name / "anat"
-        output_anat.mkdir(parents=True, exist_ok=True)
-
-        label_sets = find_label_sets(input_anat)
-
-        for base_name, label_dict in label_sets.items():
-            if not {"GM", "SC", "lesion"}.issubset(label_dict.keys()):
-                print(f"⚠️ Skipping {base_name} (missing one or more required labels)")
-                continue
-
-            output_file = output_anat / f"{base_name}_label-combined_seg.nii.gz"
-
-            # Try to find the original image
-            ref_image_path = (
-                input_root.parent.parent / subject_dir.name / "anat" / f"{base_name}.nii.gz"
-            )
-            ref_image_path = ref_image_path if ref_image_path.exists() else None
-
-            combine_labels(label_dict, output_file, ref_image_path)
-
+    suffixes = args.suffixes
+    priors = [tuple(prior.split(":")) for prior in args.priors]
+    # Load label files
+    label_arrays = load_labels(args.input, suffixes)
+    combinations = generate_combinations(suffixes, priors)
+    combined, label_dict = build_label_masks(label_arrays, combinations, suffixes)
+    # Save NIfTI
+    first_label = list(label_arrays.values())[0]
+    first_img = next(Path(args.input).glob(f"*label-{suffixes[0]}_seg.nii.gz"))
+    nii = nib.load(str(first_img))
+    nib.save(nib.Nifti1Image(combined, nii.affine, nii.header), args.output)
+    # Save JSON
+    with open(args.json, "w") as f:
+        json.dump(label_dict, f, indent=2)
+    print(f"✅ Saved {args.output}")
+    print(f"✅ Saved {args.json}")
 
 if __name__ == "__main__":
     main()
