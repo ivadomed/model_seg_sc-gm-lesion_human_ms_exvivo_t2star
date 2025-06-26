@@ -83,7 +83,6 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
 
         out_anat_path = output_images_dir / folder_name / 'anat'
         out_anat_path.mkdir(parents=True, exist_ok=True)
-        save_nifti_slice(mri_data, mri_img.affine, out_anat_path / file_name)
 
         label_folder = label_base_path / folder_name / 'anat'
         label_paths = get_available_labels(label_folder, base_name, expected_labels)
