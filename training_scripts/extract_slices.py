@@ -127,7 +127,7 @@ def main():
 
     path_data = Path(args.path_data)
     path_labels = path_data / args.label_folder
-    path_out_images = Path(args.path_out) / 'data_extracted'
+    path_out_images = Path(args.path_out)
     path_out_labels = path_out_images / 'derivatives' / 'labels'
 
     path_out_images.mkdir(parents=True, exist_ok=True)
