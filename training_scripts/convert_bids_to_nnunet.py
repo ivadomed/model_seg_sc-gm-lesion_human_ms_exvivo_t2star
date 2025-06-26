@@ -49,28 +49,26 @@ from batchgenerators.utilities.file_and_folder_operations import maybe_mkdir_p
 from nnunetv2.dataset_conversion.generate_dataset_json import generate_dataset_json
 
 
-def ensure_3d_and_save(src_path: Path, dst_path: Path):
+def ensure_3d_and_save(src_path: Path, dst_path: Path, force_dtype=None):
     img = nib.load(str(src_path))
     data = np.asarray(img.dataobj)
 
     # Force data to 3D
     if data.ndim == 2:
-        data = data[:, :, np.newaxis]  # (H, W) → (H, W, 1)
+        data = data[:, :, np.newaxis]
     elif data.ndim == 4 and data.shape[-1] == 1:
-        data = data[:, :, :, 0]  # drop 4th dim if singleton
-
-    # Reorient: ensure the slice axis is first (Z, Y, X)
-    if data.shape[1] == 1:  # likely (X, 1, Z)
-        data = np.transpose(data, (2, 1, 0))  # → (Z, 1, X)
-    elif data.shape[2] == 1:  # likely (X, Y, 1)
-        data = np.transpose(data, (1, 2, 0))  # → (Y, 1, X)
+        data = data[:, :, :, 0]
+    if data.shape[1] == 1:
+        data = np.transpose(data, (2, 1, 0))
+    elif data.shape[2] == 1:
+        data = np.transpose(data, (1, 2, 0))
     elif data.shape[0] == 1:
-        data = np.transpose(data, (1, 0, 2))  # → (Y, Z, X) — edge case
+        data = np.transpose(data, (1, 0, 2))
     elif data.shape[0] < data.shape[1] and data.shape[0] < data.shape[2]:
-        # If first axis is smallest, likely slice is misplaced
-        data = np.transpose(data, (1, 2, 0))  # put slice axis first
+        data = np.transpose(data, (1, 2, 0))
 
-    nib.save(nib.Nifti1Image(data.astype(np.float32), img.affine, img.header), str(dst_path))
+    dtype = force_dtype if force_dtype else data.dtype
+    nib.save(nib.Nifti1Image(data.astype(dtype), img.affine, img.header), str(dst_path))
 
 
 def parse_args():
@@ -127,8 +125,8 @@ def main():
         img_out = imagesTr / f'{sample_id}_0000.nii.gz'
         lbl_out = labelsTr / f'{sample_id}.nii.gz'
 
-        ensure_3d_and_save(image_path, img_out)
-        ensure_3d_and_save(label_path, lbl_out)
+        ensure_3d_and_save(image_path, img_out, force_dtype=np.float32)
+        ensure_3d_and_save(label_path, lbl_out, force_dtype=np.uint8)
         print(f"✅ Copied {image_path.name} and label to {sample_id}")
         sample_count += 1
 

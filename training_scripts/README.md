@@ -102,7 +102,7 @@ To be able to use nnU-Net trainer, we need to convert the file structure, notabl
 - Convert files to 3D NIfTI objects (even though these are single slice), to address #6.
 
 ~~~
-python convert_bids_to_nnunet.py --path-data ${PATH_PROCESSED}/data_slice --tasknumber 502
+python convert_bids_to_nnunet.py --path-data ${PATH_PROCESSED}/data_slice --label-json ${PATH_DATA}/derivatives/labels_combined-sc-gm/sub-01/anat/sub-01_part-mag_chunk-02_T2starw_label-combined_classes.json --tasknumber 502
 ~~~
 
 This will output a dataset called `Dataset502_Segmentation` in the `${PATH_PROCESSED}/nnunet_raw` folder.
