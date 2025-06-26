@@ -86,7 +86,7 @@ def main():
     args = parse_args()
 
     path_data = Path(args.path_data)
-    path_out = Path(args.path_out) if args.path_out else path_data.parent / (path_data.name + "_nnunet_raw")
+    path_out = Path(args.path_out) if args.path_out else path_data.parent / "nnunet_raw"
     labels_root = path_data / "derivatives" / "labels"
     images_root = path_data
 

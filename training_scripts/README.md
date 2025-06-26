@@ -81,12 +81,17 @@ Because of the need to create single file with one-hot encoder for nnUnetv2 (mor
 python combine_labels.py --path-label-in ${PATH_DATA}/derivatives/labels --path-label-out ${PATH_DATA}/derivatives/labels_combined-sc-gm --suffixes SC GM --priors GM:SC
 ~~~
 
+Now would be a good time to introduce another environment variable:
+~~~
+PATH_PROCESSED="<PATH_TO_PROCESSED_DATASET>"
+~~~
+
 ### Extract slices
 
 Extract 2D slices from each of the 3D volume, where labels are present, and generate a new folder that will be used for training the nnUNet model:
 
 ~~~
-python extract_slices.py --path-data ${PATH_DATA} --label-folder derivatives/labels_combined --labels combined --path-out ${PATH_DATA}_slice
+python extract_slices.py --path-data ${PATH_DATA} --label-folder derivatives/labels_combined-sc-gm --labels combined --path-out ${PATH_PROCESSED}/data_slice
 ~~~
 
 ### Convert from BIDS to nnU-Net file structure
@@ -97,21 +102,21 @@ To be able to use nnU-Net trainer, we need to convert the file structure, notabl
 - Convert files to 3D NIfTI objects (even though these are single slice), to address #6.
 
 ~~~
-python convert_bids_to_nnunet.py --path-data ${PATH_DATA}_slice
+python convert_bids_to_nnunet.py --path-data ${PATH_PROCESSED}/data_slice
 ~~~
 
-This will output a dataset called `Dataset502_Segmentation` in the `${PATH_DATA}_slice_nnunet_raw` folder.
+This will output a dataset called `Dataset502_Segmentation` in the `${PATH_PROCESSED}/nnunet_raw` folder.
 
 ### nnUNet data preprocessing
 
 Before training the model, nnUNet performs data preprocessing and checks the integrity of the dataset:
 
 ~~~
-export nnUNet_raw="${PATH_DATA}_slice_nnunet_raw"
-export nnUNet_preprocessed="${PATH_DATA}_slice_nnunet_preprocessed"
-export nnUNet_results="${PATH_DATA}_slice_nnunet_results"
+export nnUNet_raw="${PATH_PROCESSED}/nnunet_raw"
+export nnUNet_preprocessed="${PATH_PROCESSED}/nnunet_preprocessed"
+export nnUNet_results="${PATH_PROCESSED}/nnunet_results"
 
-nnUNetv2_plan_and_preprocess -d <DATASET_ID> --verify_dataset_integrity
+nnUNetv2_plan_and_preprocess -d 502 --verify_dataset_integrity
 ~~~
 
 You will get the configuration plan for all four configurations (2d, 3d_fullres, 3d_lowres, 3d_cascade_fullres).
