@@ -40,6 +40,7 @@ With the corresponding nnUnetv2 dataset structure:
 
 """
 import argparse
+import json
 from pathlib import Path
 import shutil
 import numpy as np
@@ -75,6 +76,7 @@ def ensure_3d_and_save(src_path: Path, dst_path: Path):
 def parse_args():
     parser = argparse.ArgumentParser(description="Convert BIDS-style dataset into nnUNet v2 format (slice-based).")
     parser.add_argument("--path-data", required=True, help="Path to root of the BIDS dataset")
+    parser.add_argument("--label-json", required=True, help="Path to JSON file specifying label names and values (e.g., '{\"background\": 0, ...}')")
     parser.add_argument("--path-out", default=None, help="(Optional) Output path (default: path-data + '_nnunet_raw')")
     parser.add_argument("--modality", default="T2starw", help="Modality name (e.g., T2starw, T1w). Default: T2starw")
     parser.add_argument("--taskname", default="Segmentation", help="Task name. Default: Segmentation")
@@ -98,13 +100,16 @@ def main():
     maybe_mkdir_p(imagesTr)
     maybe_mkdir_p(labelsTr)
 
-    label_dict = {
-        'background': 0,
-        'white matter without lesion': 1,
-        'white matter with lesion': 2,
-        'gray matter without lesion': 3,
-        'gray matter with lesion': 4,
-    }
+    # Load label definitions
+    with open(args.label_json, 'r') as f:
+        # Validate label dictionary
+        label_dict = json.load(f)
+        assert isinstance(label_dict, dict), "Label JSON must define a dictionary"
+        assert all(isinstance(k, str) for k in label_dict.keys()), "All label keys must be strings"
+        assert all(isinstance(v, int) for v in label_dict.values()), "All label values must be integers"
+        assert len(set(label_dict.values())) == len(label_dict), "Label values must be unique"
+        assert 0 in label_dict.values(), "Label values must include 0 (for background)"
+        print(f"✅ Loaded label definitions: {label_dict}")
 
     label_files = sorted(labels_root.rglob("*_label-combined_seg.nii.gz"))
     sample_count = 0
