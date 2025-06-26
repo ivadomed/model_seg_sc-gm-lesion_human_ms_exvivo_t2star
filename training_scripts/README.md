@@ -67,20 +67,18 @@ Segment a few slices per volume, see example below:
 
 ### Convert labels to one-hot encoder
 
-Because of the need to create single file with one-hot encoder for nnUnetv2 (more details here #2), we need a script to combine manually segmented SC, GM and lesion into:
+Because of the need to create single file with one-hot encoder for nnUnetv2 (more details here #2), we need a script to combine manually segmented SC, GM and lesion into several non-overlapping classes. Example for white matter and gray matter:
 
 ```json
-"labels": {
-    "background": 0,
-    "white matter without lesion": 1,
-    "white matter with lesion": 2,
-    "gray matter without lesion": 3,
-    "gray matter with lesion": 4
+{
+  "background": 0,
+  "SC_without_GM": 1,
+  "SC_GM": 2
 }
 ```
 
 ~~~
-python combine_labels.py --path-label-in ${PATH_DATA}/derivatives/labels --path-label-out ${PATH_DATA}/derivatives/labels_combined
+python combine_labels.py --path-label-in ${PATH_DATA}/derivatives/labels --path-label-out ${PATH_DATA}/derivatives/labels_combined-sc-gm --suffixes SC GM --priors GM:SC
 ~~~
 
 ### Extract slices
