@@ -150,12 +150,13 @@ Track training progress:
 nnUNet_results/DatasetDATASET-ID_TASK-NAME/nnUNetTrainer__nnUNetPlans__CONFIG/fold_FOLD/progress.png
 ~~~
 
-
-
-
 ## Running inference
 
-To run inference using our trained model, we recommend using the instructions in [README.md](../README.md). However, if you want to perform inference on your own model, there are multiple ways to do so. 
+To test the model on a 3D volume, run the following:
+
+~~~
+nnUNetv2_predict -i <PATH_TO_FOLDER_CONTAINING_NIFTI> -o <PATH_TO_PRED> -d 502 -c 2d -f 0 -tr nnUNetTrainerWandb -chk checkpoint_best.pth -device mps
+~~~
 
 ### Method 1 - Using your previous training
 
