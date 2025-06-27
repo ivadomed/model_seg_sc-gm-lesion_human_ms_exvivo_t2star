@@ -16,9 +16,19 @@ import torch
 import wandb
 
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainer import nnUNetTrainer
+from batchgenerators.utilities.file_and_folder_operations import join
 
+
+# Parameters
+NUM_EPOCHS = 300  # Number of epochs to train
+SAVE_EPOCHS = [50, 100, 300, 500]  # Epochs at which to save the model checkpoint
 
 class nnUNetTrainerWandb(nnUNetTrainer):
+
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = NUM_EPOCHS
 
     def run_training(self):
         self.on_train_start()
@@ -44,6 +54,11 @@ class nnUNetTrainerWandb(nnUNetTrainer):
                 self.on_validation_epoch_end(val_outputs)
 
             self.on_epoch_end()
+
+            # Save model at specific epochs
+            if epoch in SAVE_EPOCHS:
+                self.save_checkpoint(join(self.output_folder, f"checkpoint_epoch{epoch}.pth"))
+
         wandb.finish()  
         self.on_train_end()
 
