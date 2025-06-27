@@ -32,6 +32,7 @@ def parse_args():
                         help='Relative path to the label folder inside the dataset.')
     parser.add_argument('--adjacent-slices', type=int, default=0, 
                         help='Number of adjacent MRI slices to include before and after each labeled slice (labels not included). Default: 0')
+    parser.add_argument('--use-phase', action='store_true', help='If set, also extract the part-phase image in addition to the magnitude image.')
     return parser.parse_args()
 
 
@@ -71,7 +72,7 @@ def save_nifti_slice(data, affine, out_path):
     save(img, str(out_path))
 
 
-def process_subject(mri_path, label_base_path, output_images_dir, output_labels_dir, expected_labels, adjacent_slices):
+def process_subject(mri_path, label_base_path, output_images_dir, output_labels_dir, expected_labels, adjacent_slices, use_phase=False):
     folder_name = Path(mri_path).name
     files = find_files(mri_path)
     count = 0
@@ -83,6 +84,20 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
         subject = base_name.split('_')[0]  # e.g., sub-01
         mri_img = load(file_path)
         mri_data = np.asarray(mri_img.dataobj)
+
+        # If phase image is requested, check for part-phase file
+        extra_contrast_img = None
+        extra_contrast_data = None
+        if use_phase:
+            if 'part-mag' in file_path:
+                extra_contrast_file = str(file_path).replace('part-mag', 'part-phase')
+                if os.path.exists(extra_contrast_file):
+                    extra_contrast_img = load(extra_contrast_file)
+                    extra_contrast_data = np.asarray(extra_contrast_img.dataobj)
+                else:
+                    print(f"Warning: part-phase file not found for {file_path}")
+            else:
+                print(f"Warning: Expected 'part-mag' in filename for {file_path}")
 
         out_anat_path = output_images_dir / folder_name / 'anat'
         out_anat_path.mkdir(parents=True, exist_ok=True)
@@ -115,6 +130,10 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
                 mri_slice = mri_data[:, idx, :]
                 mri_out_name = f"{base_name}_slice-{idx}.nii.gz"
                 save_nifti_slice(mri_slice, mri_img.affine, out_anat_path / mri_out_name)
+                if use_phase:
+                    extra_slice = extra_contrast_data[:, idx, :]
+                    extra_out_name = mri_out_name.replace('part-mag', 'part-phase')
+                    save_nifti_slice(extra_slice, extra_contrast_img.affine, out_anat_path / extra_out_name)
 
             # Save labels only at the center slice (slice_i)
             count += 1
@@ -147,7 +166,7 @@ def main():
     for folder_path in find_subject_folders(path_data):
         t0 = time()
         count, slice_indices = process_subject(
-            folder_path, path_labels, path_out_images, path_out_labels, args.labels, args.adjacent_slices
+            folder_path, path_labels, path_out_images, path_out_labels, args.labels, args.adjacent_slices, args.use_phase
         )
         total_count += count
 

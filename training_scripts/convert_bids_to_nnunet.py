@@ -82,6 +82,8 @@ def parse_args():
     parser.add_argument("--tasknumber", type=int, default=502, help="Task number. Default: 502")
     parser.add_argument("--adjacent-slices", type=int, default=0,
                         help="Number of adjacent MRI slices to include as additional input channels (center is _0000).")
+    parser.add_argument("--use-phase", action="store_true",
+                        help="If set, includes part-phase images as an additional input channel.")
     return parser.parse_args()
 
 
@@ -147,21 +149,43 @@ def main():
                 print(f"⚠️ Missing slice {slice_path.name}, skipping.")
                 break
         else:
-            for i, (_, path) in enumerate(adj_slices):
-                out_path = imagesTr / f'{sample_id}_{i:04d}.nii.gz'
-                ensure_3d_and_save(path, out_path, force_dtype=np.float32)
+            ch_idx = 0
+            for _, path in adj_slices:
+                # Save magnitude image
+                out_path_mag = imagesTr / f'{sample_id}_{ch_idx:04d}.nii.gz'
+                ensure_3d_and_save(path, out_path_mag, force_dtype=np.float32)
+                ch_idx += 1
+
+                # If use_phase, save corresponding phase image
+                if args.use_phase:
+                    phase_path = Path(str(path).replace("part-mag", "part-phase"))
+                    if not phase_path.exists():
+                        print(f"⚠️ Missing phase image for: {phase_path.name}, skipping sample.")
+                        break
+                    out_path_phase = imagesTr / f'{sample_id}_{ch_idx:04d}.nii.gz'
+                    ensure_3d_and_save(phase_path, out_path_phase, force_dtype=np.float32)
+                    ch_idx += 1
 
             lbl_out = labelsTr / f'{sample_id}.nii.gz'
             ensure_3d_and_save(label_path, lbl_out, force_dtype=np.uint8)
             print(f"✅ Saved {len(adj_slices)} channels for {sample_id}")
             sample_count += 1
 
+    # Create dataset.json
+    offsets = [0] + [i for j in range(1, args.adjacent_slices + 1) for i in (-j, j)]
+
+    channel_names = {}
+    ch_idx = 0
+    for offset in offsets:
+        channel_names[ch_idx] = f"{args.modality}_offset{offset}_mag"
+        ch_idx += 1
+        if args.use_phase:
+            channel_names[ch_idx] = f"{args.modality}_offset{offset}_phase"
+            ch_idx += 1
 
     generate_dataset_json(
         output_folder=output_base,
-        channel_names={i: f"{args.modality}_offset{offset}" for i, offset in 
-                       enumerate([0] + [i for j in range(1, args.adjacent_slices + 1) for i in 
-                                        (-j, j)])},
+        channel_names=channel_names,
         labels=label_dict,
         num_training_cases=sample_count,
         file_ending=".nii.gz",
