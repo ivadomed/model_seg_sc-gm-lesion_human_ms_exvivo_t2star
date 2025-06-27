@@ -42,6 +42,7 @@ With the corresponding nnUnetv2 dataset structure:
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 import numpy as np
 import nibabel as nib
@@ -79,6 +80,8 @@ def parse_args():
     parser.add_argument("--modality", default="T2starw", help="Modality name (e.g., T2starw, T1w). Default: T2starw")
     parser.add_argument("--taskname", default="Segmentation", help="Task name. Default: Segmentation")
     parser.add_argument("--tasknumber", type=int, default=502, help="Task number. Default: 502")
+    parser.add_argument("--adjacent-slices", type=int, default=0,
+                        help="Number of adjacent MRI slices to include as additional input channels (center is _0000).")
     return parser.parse_args()
 
 
@@ -122,17 +125,43 @@ def main():
             continue
 
         sample_id = f'{args.taskname}_{sample_count:04d}'
-        img_out = imagesTr / f'{sample_id}_0000.nii.gz'
-        lbl_out = labelsTr / f'{sample_id}.nii.gz'
 
-        ensure_3d_and_save(image_path, img_out, force_dtype=np.float32)
-        ensure_3d_and_save(label_path, lbl_out, force_dtype=np.uint8)
-        print(f"✅ Copied {image_path.name} and label to {sample_id}")
-        sample_count += 1
+        # Extract slice number from filename
+        match = re.search(r'_slice-(\d+)', fname)
+        if not match:
+            print(f"❌ Could not extract slice index from {fname}, skipping.")
+            continue
+        slice_idx = int(match.group(1))
+
+        # Define offset order: center first
+        offsets = [0] + [i for j in range(1, args.adjacent_slices + 1) for i in (-j, j)]
+
+        adj_slices = []
+        for offset in offsets:
+            idx = slice_idx + offset
+            slice_fname = re.sub(r'_slice-\d+', f'_slice-{idx}', fname) + '.nii.gz'
+            slice_path = images_root / subject / "anat" / slice_fname
+            if slice_path.exists():
+                adj_slices.append((offset, slice_path))
+            else:
+                print(f"⚠️ Missing slice {slice_path.name}, skipping.")
+                break
+        else:
+            for i, (_, path) in enumerate(adj_slices):
+                out_path = imagesTr / f'{sample_id}_{i:04d}.nii.gz'
+                ensure_3d_and_save(path, out_path, force_dtype=np.float32)
+
+            lbl_out = labelsTr / f'{sample_id}.nii.gz'
+            ensure_3d_and_save(label_path, lbl_out, force_dtype=np.uint8)
+            print(f"✅ Saved {len(adj_slices)} channels for {sample_id}")
+            sample_count += 1
+
 
     generate_dataset_json(
         output_folder=output_base,
-        channel_names={0: args.modality},
+        channel_names={i: f"{args.modality}_offset{offset}" for i, offset in 
+                       enumerate([0] + [i for j in range(1, args.adjacent_slices + 1) for i in 
+                                        (-j, j)])},
         labels=label_dict,
         num_training_cases=sample_count,
         file_ending=".nii.gz",
