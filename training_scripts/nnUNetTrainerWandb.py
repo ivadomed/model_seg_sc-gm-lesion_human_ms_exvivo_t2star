@@ -20,7 +20,7 @@ from batchgenerators.utilities.file_and_folder_operations import join
 
 
 # Parameters
-NUM_EPOCHS = 300  # Number of epochs to train
+NUM_EPOCHS = 500  # Number of epochs to train
 SAVE_EPOCHS = [50, 100, 300, 500]  # Epochs at which to save the model checkpoint
 
 class nnUNetTrainerWandb(nnUNetTrainer):
@@ -83,8 +83,10 @@ class nnUNetTrainerWandb(nnUNetTrainer):
             l = self.loss(output, target)
 
             if batch_id == 0: 
-                train_image= data[0].detach().cpu().squeeze().float().numpy()
-                
+                train_image = data[0].detach().cpu().float().numpy()
+                # If the input is 3D (eg multi-channel), we need to pick the first image (corresponding to the mag) and squeeze it
+                train_image = np.squeeze(train_image[0])
+
                 # Deal with region-based training
                 if target[0].shape[1] == 1:
                     # Not region-based, just squeeze the class dimension
