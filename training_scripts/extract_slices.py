@@ -49,6 +49,7 @@ def find_files(folder, extension='.nii.gz'):
 def get_available_labels(label_folder, base_name, expected_labels):
     available = {}
     for f in os.scandir(label_folder):
+        print("base_name :", base_name, "f.name:", f.name)
         if f.name.endswith('.nii.gz') and base_name in f.name:
             for label in expected_labels:
                 if f'label-{label}' in f.name or f'_{label}_' in f.name:
@@ -76,8 +77,9 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
     files = find_files(mri_path)
     count = 0
     slice_log = []
-
+    print("files :", files)
     for file_path in files:
+        print("\n\nFILE PATH :", file_path)
         file_name = Path(file_path).name
         base_name = file_name.replace('.nii.gz', '')
         subject = base_name.split('_')[0]  # e.g., sub-01
@@ -89,9 +91,10 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
 
         label_folder = label_base_path / folder_name / 'anat'
         label_paths = get_available_labels(label_folder, base_name, expected_labels)
-
+        print("label_paths: ", label_paths)
         if not all(label in label_paths for label in expected_labels):
-            return count, []
+            # return count, []
+            continue
 
         label_data = {
             label: (load(label_paths[label]), np.asarray(load(label_paths[label]).dataobj))
