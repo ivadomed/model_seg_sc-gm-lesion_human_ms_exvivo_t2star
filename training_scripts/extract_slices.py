@@ -104,9 +104,11 @@ def process_subject(mri_path, label_base_path, output_images_dir, output_labels_
 
         label_folder = label_base_path / folder_name / 'anat'
         label_paths = get_available_labels(label_folder, base_name, expected_labels)
+        print("HELLO", label_paths)        
 
         if not all(label in label_paths for label in expected_labels):
-            return count, []
+            print("I am the culprit")
+            continue
 
         label_data = {
             label: (load(label_paths[label]), np.asarray(load(label_paths[label]).dataobj))
