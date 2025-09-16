@@ -112,15 +112,53 @@ def main():
         np.fill_diagonal(iso_affine, [1.0, 1.0, 1.0, 1.0])
         iso_affine[:3, 3] = reference_affine[:3, 3]
 
-        combined_label_map = np.zeros_like(mag_data, dtype=np.uint8)
-        for i, suffix in enumerate(args.label_suffixes):
-            label_path = files['labels'].get(suffix)
-            if label_path and label_path.exists():
-                bit_value = 2**i
-                label_data = load_and_preprocess_image(label_path)
-                if label_data.shape == combined_label_map.shape:
-                    combined_label_map += label_data.astype(np.uint8) * bit_value
+        wm_path = files['labels'].get('SC')
+        gm_path = files['labels'].get('GM')
+        lesion_path = files['labels'].get('lesion')
+        
+        # Check that all three label files exist for this slice
+        if not all([wm_path, gm_path, lesion_path]):
+            print(f"⚠️ Skipping {key}: Missing one or more required label files (WM, GM, lesion).")
+            continue
 
+        # Load label data into numpy arrays
+        sc_path = files['labels'].get('SC')
+        gm_path = files['labels'].get('GM')
+        lesion_path = files['labels'].get('lesion')
+        
+        # Check that all three label files exist for this slice
+        if not all([sc_path, gm_path, lesion_path]):
+            print(f"⚠️ Skipping {key}: Missing one or more required label files (SC, GM, lesion).")
+            continue
+
+        # Load all label data into numpy arrays
+        sc_data = load_and_preprocess_image(sc_path)
+        gm_data = load_and_preprocess_image(gm_path)
+        lesion_data = load_and_preprocess_image(lesion_path)
+
+        # Convert to boolean masks (True where the label is present)
+        sc_mask = sc_data.astype(bool)
+        gm_mask = gm_data.astype(bool)
+        lesion_mask = lesion_data.astype(bool)
+        
+        # --- Perform the logical subtraction to define WM ---
+        # WM is the part of the SC that is NOT GM.
+        wm_mask = sc_mask & ~gm_mask
+        
+        # Initialize the final combined label map
+        combined_label_map = np.zeros_like(mag_data, dtype=np.uint8)
+        
+        # --- Apply the logic using the derived WM mask ---
+        # Class 1: WM (non-lesioned)
+        combined_label_map[wm_mask & ~lesion_mask] = 1
+        # Class 2: GM (non-lesioned)
+        combined_label_map[gm_mask & ~lesion_mask] = 2
+        # Class 3: Lesion overlapping with the derived WM
+        combined_label_map[wm_mask & lesion_mask] = 3
+        # Class 4: Lesion overlapping with GM
+        combined_label_map[gm_mask & lesion_mask] = 4
+        
+        
         save_nifti(mag_data, iso_affine, mag_nifti_ref.header, imagesTr / f'{sample_id}_0000.nii.gz')
         save_nifti(phase_data, iso_affine, mag_nifti_ref.header, imagesTr / f'{sample_id}_0001.nii.gz')
         save_nifti(combined_label_map, iso_affine, mag_nifti_ref.header, labelsTr / f'{sample_id}.nii.gz')
@@ -132,16 +170,20 @@ def main():
         print("❌ CRITICAL: No valid training cases were found.")
         return
 
-    num_classes = len(args.label_suffixes)
-    labels = {"background": 0}
-    for i in range(1, 2**num_classes):
-        combo_name = "_".join([args.label_suffixes[j] for j in range(num_classes) if (i >> j) & 1])
-        labels[combo_name] = i
-        
-    regions = {}
-    for i, suffix in enumerate(args.label_suffixes):
-        region_values = [value for key, value in labels.items() if suffix in key]
-        regions[suffix] = region_values
+    labels = {
+        "background": 0,
+        "WM": 1,
+        "GM": 2,
+        "lesion_WM": 3,
+        "lesion_GM": 4
+    }
+
+    # 'regions' group labels for nnU-Net's evaluation metrics.
+    regions = {
+        "WM": [1, 3],      # All WM (healthy + lesioned)
+        "GM": [2, 4],      # All GM (healthy + lesioned)
+        "lesion": [3, 4]   # All lesions
+    }
 
     generate_dataset_json(
         str(output_base),

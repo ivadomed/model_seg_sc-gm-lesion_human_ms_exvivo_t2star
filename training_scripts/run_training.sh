@@ -21,7 +21,7 @@
 
 
 
-# # rm -rf /Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/processed_data_full_multichannel
+# rm -rf /Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/processed_data_full_multichannel
 export PATH_DATA="/Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/Processed_BIDS_full"
 export PATH_PROCESSED="/Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/processed_data_full_multichannel"
 export DATASET_ID=503
@@ -37,7 +37,6 @@ export nnUNet_preprocessed="${PATH_PROCESSED}/nnunet_preprocessed"
 export nnUNet_results="${PATH_PROCESSED}/nnunet_results"
 
 # --- REMOVED STEP 2 (combine_labels.py) ---
-# This script was the source of the problem and should not be used.
 
 # echo "Step 1: Extracting 2D slices for all individual labels..."
 # python extract_slices_multichannel.py \
