@@ -40,11 +40,22 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
     anat_path = subject_dir / 'anat'
     if not anat_path.exists(): return 0
 
-    mag_files = list(anat_path.glob('*_part-mag_*.nii.gz'))
+    mag_files = list(anat_path.glob('*_part-mag*.nii.gz'))
+    if not mag_files:
+        print(f"  [DEBUG] ⚠️ No magnitude files found in {anat_path}")
+        return 0
+        
     slice_count = 0
 
     for mag_path in tqdm(mag_files, desc=f"Processing {subject_dir.name}", leave=False):
-        phase_filename = mag_path.name.replace('_part-mag_', '_part-phase_')
+        base_name_for_label = mag_path.name.replace('.nii.gz', '')
+        label_folder = label_base_path / subject_dir.name / 'anat'
+        main_label_path = label_folder / f"{base_name_for_label}_label-{expected_labels[0]}_seg.nii.gz"
+        
+        if not main_label_path.exists():
+            continue
+
+        phase_filename = mag_path.name.replace('_part-mag', '_part-phase')
         phase_path = mag_path.with_name(phase_filename)
         if not phase_path.exists(): continue
 
@@ -53,16 +64,22 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
             mag_data = np.asarray(mag_img.dataobj)
             phase_img = nib.load(phase_path)
             phase_data = np.asarray(phase_img.dataobj)
+            main_label_img = nib.load(main_label_path)
+            main_label_data = np.asarray(main_label_img.dataobj)
         except Exception: continue
 
-        base_name_for_label = mag_path.name.replace('.nii.gz', '')
-        label_folder = label_base_path / subject_dir.name / 'anat'
-        main_label_path = label_folder / f"{base_name_for_label}_label-{expected_labels[0]}_seg.nii.gz"
-        if not main_label_path.exists(): continue
+        # --- SOLUTION: ADD SHAPE VERIFICATION HERE ---
+        if mag_data.shape != main_label_data.shape:
+            print(f"\n  [ERROR] Shape mismatch for {subject_dir.name}!")
+            print(f"    - Image Shape:   {mag_data.shape} (from {mag_path.name})")
+            print(f"    - Label Shape:   {main_label_data.shape} (from {main_label_path.name})")
+            print("    Skipping this file pair due to inconsistency.")
+            continue # Skip to the next magnitude file
+        # --- END OF SOLUTION ---
 
-        main_label_data = np.asarray(nib.load(main_label_path).dataobj)
         annotated_slice_indices = [i for i in range(main_label_data.shape[1]) if np.any(main_label_data[:, i, :])]
-        if not annotated_slice_indices: continue
+        if not annotated_slice_indices:
+            continue
         
         output_images_anat = output_dir / subject_dir.name / 'anat'
         output_labels_anat = output_dir / 'derivatives' / 'labels' / subject_dir.name / 'anat'
@@ -72,6 +89,8 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
         for slice_idx in annotated_slice_indices:
             mag_slice_fname = f"{base_name_for_label}_slice-{slice_idx}.nii.gz"
             phase_slice_fname = mag_slice_fname.replace('_part-mag_', '_part-phase_')
+            
+            # This line will no longer crash because we've confirmed shapes match
             save_nifti_slice(mag_data[:, slice_idx, :], mag_img.affine, mag_img.header, output_images_anat / mag_slice_fname)
             save_nifti_slice(phase_data[:, slice_idx, :], phase_img.affine, phase_img.header, output_images_anat / phase_slice_fname)
 
@@ -79,10 +98,12 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
                 label_path = label_folder / f"{base_name_for_label}_label-{label_type}_seg.nii.gz"
                 if label_path.exists():
                     label_img = nib.load(label_path)
+                    # We can assume other labels also match if the primary one did
                     out_label_fname = f"{base_name_for_label}_slice-{slice_idx}_label-{label_type}_seg.nii.gz"
                     save_nifti_slice(np.asarray(label_img.dataobj)[:, slice_idx, :], label_img.affine, label_img.header, output_labels_anat / out_label_fname)
             slice_count += 1
     return slice_count
+
 
 def main():
     args = parse_args()

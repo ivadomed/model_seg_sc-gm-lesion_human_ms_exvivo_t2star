@@ -22,10 +22,10 @@
 
 
 # rm -rf /Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/processed_data_full_multichannel
-export PATH_DATA="/Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/Processed_BIDS_full"
-export PATH_PROCESSED="/Users/homefolder/Local/NeuroPoly/project1_seg_lesion/datasets/processed_data_full_multichannel"
+export PATH_DATA="/home/ge.polymtl.ca/pahoa/nih_project/datasets/bids_dataset"
+export PATH_PROCESSED="/home/ge.polymtl.ca/pahoa/nih_project/datasets/processed_data_full_multichannel"
 export DATASET_ID=503
-export TASK_NAME="MagPhaseExp"
+export TASK_NAME="MagPhaseExp_no_soft_edges"
 
 # Derivative and output paths for the new workflow
 export SLICED_DATA_DIR="${PATH_PROCESSED}/data_slice"
@@ -38,23 +38,23 @@ export nnUNet_results="${PATH_PROCESSED}/nnunet_results"
 
 # --- REMOVED STEP 2 (combine_labels.py) ---
 
-# echo "Step 1: Extracting 2D slices for all individual labels..."
-# python extract_slices_multichannel.py \
-#   --path-data "$PATH_DATA" \
-#   --path-out "$SLICED_DATA_DIR" \
-#   --labels SC GM lesion \
-#   --label-folder "$ORIGINAL_LABELS_DIR" # Use the original, uncombined labels
+echo "Step 1: Extracting 2D slices for all individual labels..."
+python extract_slices_multichannel.py \
+  --path-data "$PATH_DATA" \
+  --path-out "$SLICED_DATA_DIR" \
+  --labels SC GM lesion \
+  --label-folder "$ORIGINAL_LABELS_DIR" # Use the original, uncombined labels
 
-# echo "Step 2: Converting to nnU-Net format with multi-channel labels..."
-# python convert_bids_to_nnunet_multichannel.py \
-#   --path-data "$SLICED_DATA_DIR" \
-#   --path-out "$nnUNet_raw" \
-#   --taskname "$TASK_NAME" \
-#   --tasknumber $DATASET_ID \
-#   --label-suffixes SC GM lesion \
-#   # The script will now find the class definitions automatically from the BIDS source
+echo "Step 2: Converting to nnU-Net format with multi-channel labels..."
+python convert_bids_to_nnunet_multichannel.py \
+  --path-data "$SLICED_DATA_DIR" \
+  --path-out "$nnUNet_raw" \
+  --taskname "$TASK_NAME" \
+  --tasknumber $DATASET_ID \
+  --label-suffixes SC GM lesion \
+  # The script will now find the class definitions automatically from the BIDS source
 
-# echo "Step 3: Running nnU-Net..."
-# # These commands remain the same
-# nnUNetv2_plan_and_preprocess -d $DATASET_ID --verify_dataset_integrity
-nnUNetv2_train $DATASET_ID 2d 0 --npz -device mps -tr nnUNetTrainerWandb
+echo "Step 3: Running nnU-Net..."
+# These commands remain the same
+CUDA_VISIBLE_DEVICES=2 nnUNetv2_plan_and_preprocess -d $DATASET_ID --verify_dataset_integrity
+CUDA_VISIBLE_DEVICES=2 nnUNetv2_train $DATASET_ID 2d 0 --npz -tr nnUNetTrainerWandb

@@ -89,6 +89,8 @@ def main():
                 file_groups[key]['labels'][suffix] = label_path
                 break
     
+    manifest = {}
+    
     sample_count = 0
     for key, files in tqdm(file_groups.items(), desc="Converting to nnUNet format"):
         mag_path = files.get('mag')
@@ -116,25 +118,38 @@ def main():
         gm_path = files['labels'].get('GM')
         lesion_path = files['labels'].get('lesion')
         
-        # Check that all three label files exist for this slice
-        if not all([wm_path, gm_path, lesion_path]):
-            print(f"⚠️ Skipping {key}: Missing one or more required label files (WM, GM, lesion).")
-            continue
-
-        # Load label data into numpy arrays
         sc_path = files['labels'].get('SC')
         gm_path = files['labels'].get('GM')
-        lesion_path = files['labels'].get('lesion')
-        
-        # Check that all three label files exist for this slice
-        if not all([sc_path, gm_path, lesion_path]):
-            print(f"⚠️ Skipping {key}: Missing one or more required label files (SC, GM, lesion).")
+
+        # Check that the required base labels (SC, GM) exist for this slice
+        if not all([sc_path, gm_path]):
+            print(f"⚠️ Skipping {key}: Missing required SC or GM label file.")
             continue
 
-        # Load all label data into numpy arrays
+        # Get the lesion path (this one is OPTIONAL)
+        lesion_path = files['labels'].get('lesion')
+
+        # Load required label data into numpy arrays
         sc_data = load_and_preprocess_image(sc_path)
         gm_data = load_and_preprocess_image(gm_path)
-        lesion_data = load_and_preprocess_image(lesion_path)
+        
+        # If a lesion file exists, load it. Otherwise, create an empty (all zeros) array.
+        if lesion_path:
+            lesion_data = load_and_preprocess_image(lesion_path)
+            print(f"✓ Found lesion label for {key}")
+        else:
+            # Create a blank lesion mask for healthy/control cases
+            lesion_data = np.zeros_like(mag_data, dtype=np.uint8) 
+            print(f"✓ No lesion label for {key}, creating empty mask (healthy case).")
+
+        # Convert to boolean masks (True where the label is present)
+        if mag_data.shape != sc_data.shape or mag_data.shape != gm_data.shape or mag_data.shape != lesion_data.shape:
+            print(f"⚠️ Skipping {key}: Shape Mismatch!")
+            print(f"   - Mag Shape:   {mag_data.shape}")
+            print(f"   - SC Shape:    {sc_data.shape}")
+            print(f"   - GM Shape:    {gm_data.shape}")
+            print(f"   - Lesion Shape: {lesion_data.shape}")
+            continue # Skip this problematic case
 
         # Convert to boolean masks (True where the label is present)
         sc_mask = sc_data.astype(bool)
@@ -162,6 +177,8 @@ def main():
         save_nifti(mag_data, iso_affine, mag_nifti_ref.header, imagesTr / f'{sample_id}_0000.nii.gz')
         save_nifti(phase_data, iso_affine, mag_nifti_ref.header, imagesTr / f'{sample_id}_0001.nii.gz')
         save_nifti(combined_label_map, iso_affine, mag_nifti_ref.header, labelsTr / f'{sample_id}.nii.gz')
+        
+        manifest[sample_id] = key.removesuffix('.nii.gz')
         
         sample_count += 1
 
@@ -196,6 +213,12 @@ def main():
         overwrite_image_reader_writer="NibabelIOWithReorient"
     )
     print(f"✅ Finished. Created {sample_count} samples in {output_base}")
+    
+    manifest_path = output_base / "inference_manifest.json"
+    with open(manifest_path, 'w') as f:
+        json.dump(manifest, f, indent=4)
+    print(f"✅ Saved inference manifest to {manifest_path}")
+    
 
 if __name__ == "__main__":
     main()
