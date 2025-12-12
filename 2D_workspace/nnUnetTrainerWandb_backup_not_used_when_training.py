@@ -74,7 +74,8 @@ random.seed(seed)
 os.environ['PYTHONHASHSEED'] = str(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
-# No CUDA-specific seeding is needed for MPS
+
+DO_PREPROCESSING = True
 
 # torch.use_deterministic_algorithms(True)
 
@@ -108,12 +109,12 @@ def _preprocess_data_gpu(data_batch: torch.Tensor) -> torch.Tensor:
     mask = kornia.morphology.opening(mask, kernel)
 
     # 3. Magnitude: Apply CLAHE
-    mag_min = mag_batch.amin(dim=(-2, -1), keepdim=True)
-    mag_max = mag_batch.amax(dim=(-2, -1), keepdim=True)
-    mag_normalized = (mag_batch - mag_min) / (mag_max - mag_min + 1e-6)
+    # mag_min = mag_batch.amin(dim=(-2, -1), keepdim=True)
+    # mag_max = mag_batch.amax(dim=(-2, -1), keepdim=True)
+    # mag_normalized = (mag_batch - mag_min) / (mag_max - mag_min + 1e-6)
     
-    mag_clahe = kornia.enhance.equalize_clahe(mag_normalized)
-    processed_mag = mag_clahe * mask
+    # mag_clahe = kornia.enhance.equalize_clahe(mag_normalized)
+    # processed_mag = mag_clahe * mask
 
     # 4. Phase: Apply linear contrast stretching
     safe_mask = mask.bool()
@@ -128,6 +129,8 @@ def _preprocess_data_gpu(data_batch: torch.Tensor) -> torch.Tensor:
     phase_rescaled = torch.clamp(phase_rescaled, 0, 1)
     processed_phase = phase_rescaled * mask
     
+    processed_mag = mag_batch * mask
+    # processed_phase = phase_batch * mask
     # 5. Combine channels
     processed_batch = torch.cat([processed_mag, processed_phase], dim=1)
     if was_3dim : 
@@ -174,8 +177,6 @@ class CustomSpatialTransform(BasicTransform):
         self.patch_size = patch_size
         self.p_per_sample = p_per_sample
         
-        # --- CORRECTED APPROACH: Instantiate two sets of augmenters ---
-        # One for the image with 'bilinear' interpolation
         self.affine_augmenter_image = kornia.augmentation.RandomAffine(
             degrees=degrees, translate=tuple(float(t) / p for t, p in zip(translation_px, patch_size)),
             scale=scale, shear=shear, p=1.0, resample='bilinear'
@@ -270,7 +271,7 @@ def plot_edge_map(base_image, edge_map, title="Edge Weight Map", epoch=0):
     
     # Overlay the edge map. 'hot' is a good colormap for weights.
     # We only show regions where the weight is > 1 to see the edges clearly.
-    cax = ax.imshow(edge_map.T, cmap='hot', alpha=0.6, vmin=1.0)
+    cax = ax.imshow(edge_map.T, cmap='hot_r', alpha=0.6, vmin=0.0, vmax=1.0)
     
     fig.colorbar(cax, ax=ax, label="Edge Weight")
     ax.set_title(f"{title} (Epoch {epoch})")
@@ -354,6 +355,7 @@ class nnUNetTrainerWandb(nnUNetTrainer):
         super().__init__(plans, configuration, fold, dataset_json, device)
         self.num_segmentation_classes = len(self.label_manager.foreground_regions) if self.label_manager.has_regions else len(self.label_manager.foreground_labels)
         self.num_segmentation_classes += 1 ## because of the background class
+    
         
         patch_size = self.configuration_manager.patch_size
 
@@ -374,7 +376,8 @@ class nnUNetTrainerWandb(nnUNetTrainer):
             use_mask_for_norm=self.configuration_manager.use_mask_for_norm,
             is_cascaded=self.is_cascaded, foreground_labels=self.label_manager.foreground_labels,
             regions=self.label_manager.foreground_regions if self.label_manager.has_regions else None,
-            ignore_label=self.label_manager.ignore_label)
+            ignore_label=self.label_manager.ignore_label,
+            do_preprocessing=DO_PREPROCESSING)
         
     
     def _get_augmentation_config(self) -> dict:
@@ -473,17 +476,17 @@ class nnUNetTrainerWandb(nnUNetTrainer):
         self.dataloader_train.num_processes = 16
         self.dataloader_val.num_processes = 16
     
-        self.num_epochs = 100
+        self.num_epochs = 200
         self.initial_lr = 1e-3
         
-        self.mosaic_probability = 1.0
+        self.mosaic_probability = 0.0
 
         self.edge_params = {
-            # 0: {'edge_weight': 1.0, 'kernel_size': 5},
-            # 1: {'edge_weight': 1.0, 'kernel_size': 5},
-            # 2: {'edge_weight': 0.8, 'kernel_size': 3},  
-            # 3: {'edge_weight': 0.5, 'kernel_size': 3},
-            # 4: {'edge_weight': 0.3, 'kernel_size': 3}
+            # 0: {'edge_weight': 0.9, 'kernel_size': 7},
+            # 1: {'edge_weight': 0.9, 'kernel_size': 7},
+            # 2: {'edge_weight': 0.8, 'kernel_size': 5},  
+            # 3: {'edge_weight': 0.7, 'kernel_size': 5},
+            # 4: {'edge_weight': 0.5, 'kernel_size': 5}
         }
 
         soft_dice_kwargs = {
@@ -497,7 +500,7 @@ class nnUNetTrainerWandb(nnUNetTrainer):
         self.loss = DC_and_CE_with_Edge_Loss(
             soft_dice_kwargs=soft_dice_kwargs,
             ce_kwargs={},
-            weight_ce=1.0,
+            weight_ce=6.0,
             weight_dice=1.0,
             ignore_label=self.label_manager.ignore_label,
             dice_class=MemoryEfficientSoftDiceLoss, # As used in original setup
@@ -538,13 +541,14 @@ class nnUNetTrainerWandb(nnUNetTrainer):
             foreground_labels: Union[Tuple[int, ...], List[int]] = None,
             regions: List[Union[List[int], Tuple[int, ...], int]] = None,
             ignore_label: int = None,
+            do_preprocessing: bool = True
     ) -> BasicTransform:
         print("IN THE CUSTOM GET TRAINING")
         transforms = []
         
-        # if preprocess_fn_for_transform is not None:
-        #     print("Doing preprocessing in transforms!!")
-        transforms.append(GPUPreprocessingTransform())
+
+        if do_preprocessing : 
+            transforms.append(GPUPreprocessingTransform())
         
         # transforms.append(CPUPreprocessingTransform())
             
@@ -569,16 +573,16 @@ class nnUNetTrainerWandb(nnUNetTrainer):
             )
         )
         
-        max_translate_dist = [int(p * 0.35) for p in patch_size_spatial]
+        max_translate_dist = [int(p * 0.45) for p in patch_size_spatial]
         transforms.append(
             CustomSpatialTransform(
                 patch_size=patch_size_spatial,
                 p_per_sample=0.95,     
-                degrees=(-30, 30),     
-                scale=(0.9, 1.4),     
+                degrees=(-90, 90),     
+                scale=(0.7, 1.7),     
                 translation_px=tuple(max_translate_dist),
-                shear=(-15, 15),       
-                perspective=0.15       
+                shear=(-35, 35),       
+                perspective=0.35       
             )
         )
     
@@ -655,7 +659,6 @@ class nnUNetTrainerWandb(nnUNetTrainer):
         return ComposeTransforms(transforms)
     
     def run_training(self):
-        DO_PREPROCESSING = True
         self.on_train_start(do_preprocessing=DO_PREPROCESSING)
         
         for epoch in tqdm.tqdm(range(self.current_epoch, self.num_epochs)):
@@ -665,7 +668,7 @@ class nnUNetTrainerWandb(nnUNetTrainer):
             self.on_train_epoch_start()
             train_outputs = []
             for batch_id in tqdm.tqdm(range(self.num_iterations_per_epoch)):
-               train_outputs.append(self.train_step(next(self.dataloader_train), batch_id, epoch, do_preprocessing=DO_PREPROCESSING))
+               train_outputs.append(self.train_step(next(self.dataloader_train), batch_id, epoch))
             self.on_train_epoch_end(train_outputs)
             with torch.no_grad():
                 self.on_validation_epoch_start()
@@ -680,7 +683,8 @@ class nnUNetTrainerWandb(nnUNetTrainer):
 
     def wandb_init(self, do_preprocessing):
         """Initializes a new wandb run with a comprehensive configuration."""
-        project_name = f"model_seg_sc-gm-lesion_human_ms_exvivo_t2star-{self.plans_manager.dataset_name}"
+        # project_name = f"model_seg_sc-gm-lesion_human_ms_exvivo_t2star-{self.plans_manager.dataset_name}"
+        project_name = "model_seg_sc-gm-lesion_human_ms_exvivo_t2star-Dataset504_MagPhaseExp_no_soft_edges"
         
         # --- Build a comprehensive config dictionary ---
         config = {
@@ -884,7 +888,7 @@ class nnUNetTrainerWandb(nnUNetTrainer):
     
     
 
-    def train_step(self, batch: dict, batch_id: int, epoch_id: int, do_preprocessing: bool) -> dict:
+    def train_step(self, batch: dict, batch_id: int, epoch_id: int) -> dict:
         data, target = batch['data'], batch['target']
         
         data = data.to(self.device, non_blocking=True)
@@ -969,8 +973,8 @@ class nnUNetTrainerWandb(nnUNetTrainer):
                     wandb.log({"Plots/Edge_Weight_Map_Train": wandb.Image(edge_fig)}, step=self.current_epoch)
                     plt.close(edge_fig)
                     
-                    wandb.log({"Plots/Segmentation_Comparison_Train": wandb.Image(fig)}, step=self.current_epoch)
-                    plt.close(fig)
+                wandb.log({"Plots/Segmentation_Comparison_Train": wandb.Image(fig)}, step=self.current_epoch)
+                plt.close(fig)
         
         
         # return {'loss': l.detach().cpu().numpy()}
