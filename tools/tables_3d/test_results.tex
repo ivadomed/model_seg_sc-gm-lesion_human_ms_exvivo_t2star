@@ -1,0 +1,17 @@
+\begin{table*}[t]
+    \centering
+    \caption{Comparison of Dice and HD95 metrics (3D Results - test_results.csv). Best results are highlighted in bold.}
+    \label{tab:results}
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{lcccccccccc}
+            \toprule
+            & \multicolumn{2}{c}{\textbf{White Matter}} & \multicolumn{2}{c}{\textbf{Gray Matter}} & \multicolumn{2}{c}{\textbf{Lesion WM}} & \multicolumn{2}{c}{\textbf{Lesion GM}} & \multicolumn{2}{c}{\textbf{Total Average}} \\
+            \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+            \textbf{Config} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} \\
+            \midrule
+            patchsize\_5\_adamw (Test (TTA)) & $0.888 \pm 0.003$ & $0.63 \pm 0.11$ & $0.796 \pm 0.010$ & $\mathbf{0.67 \pm 0.19}$ & $0.741 \pm 0.007$ & $1.11 \pm 0.13$ & $0.680 \pm 0.007$ & $0.58 \pm 0.04$ & $0.776 \pm 0.006$ & $0.75 \pm 0.09$ \\
+            patchsize\_5\_adamw (Test (TTA + Ensemble)) & $\mathbf{0.891}$ & $\mathbf{0.53}$ & $\mathbf{0.800}$ & $0.84$ & $\mathbf{0.751}$ & $\mathbf{1.03}$ & $\mathbf{0.690}$ & $\mathbf{0.57}$ & $\mathbf{0.783}$ & $\mathbf{0.74}$ \\
+            \bottomrule
+        \end{tabular}%
+    }
+\end{table*}

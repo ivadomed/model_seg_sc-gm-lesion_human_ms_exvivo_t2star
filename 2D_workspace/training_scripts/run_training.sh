@@ -143,6 +143,6 @@ export nnUNet_results="${PATH_PROCESSED}/nnunet_results"
 # The CUDA_VISIBLE_DEVICES is set here to ensure the correct GPU is used.
 # The script receives the GPU_ID from the calling script (run_five_folds_exp.sh).
 echo "Running nnU-Net training on GPU ${GPU_ID}..."
-CUDA_VISIBLE_DEVICES=$GPU_ID nnUNetv2_train "$DATASET_ID" 2d "$FOLD" --npz -tr nnUNetTrainerWandb -device cuda
+CUDA_VISIBLE_DEVICES=$GPU_ID nnUNetv2_train "$DATASET_ID" 2d "$FOLD" --npz -tr nnUnet2DCustomTrainer -device cuda
 
 echo "--- ✅ Finished training for Fold ${FOLD} ---"

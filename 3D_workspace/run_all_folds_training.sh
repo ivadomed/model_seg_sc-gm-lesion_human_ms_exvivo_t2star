@@ -3,7 +3,7 @@
 set -e
 # set -x # Uncomment for debugging
 
-GPU_IDS_STR=2
+GPU_IDS_STR=0,1,2,3
 FOLD_IDS_STR=0,1,2,3
 
 # Convert comma-separated strings to arrays
@@ -24,8 +24,8 @@ if [ $NUM_FOLDS -eq 0 ]; then
 fi
 
 # --- CONFIGURATION ---
-DATASET_ID=1715
-EXPERIMENT_NAME="patchsize_5_otsu_masking" 
+DATASET_ID=1747
+EXPERIMENT_NAME="patch_5_adamw_aug_26" 
 TRAINER_CLASS=nnUnet3DCustomTrainer
 VENV_PATH=/home/ge.polymtl.ca/pahoa/nih_project/.venv
 DEBUG_FOLD= # Optional

@@ -1,0 +1,19 @@
+\begin{table*}[t]
+    \centering
+    \caption{Comparison of Dice and HD95 metrics (3D Results - augmentation.csv). Best results are highlighted in bold.}
+    \label{tab:results}
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{lcccccccccc}
+            \toprule
+            & \multicolumn{2}{c}{\textbf{White Matter}} & \multicolumn{2}{c}{\textbf{Gray Matter}} & \multicolumn{2}{c}{\textbf{Lesion WM}} & \multicolumn{2}{c}{\textbf{Lesion GM}} & \multicolumn{2}{c}{\textbf{Total Average}} \\
+            \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+            \textbf{Config} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} \\
+            \midrule
+            patchsize\_5\_adamw (Cross-Fold) & $\mathbf{0.837 \pm 0.092}$ & $\mathbf{0.76 \pm 0.10}$ & $\mathbf{0.824 \pm 0.079}$ & $\mathbf{0.96 \pm 0.19}$ & $\mathbf{0.747 \pm 0.080}$ & $\mathbf{1.59 \pm 0.77}$ & $\mathbf{0.665 \pm 0.092}$ & $\mathbf{1.05 \pm 0.62}$ & $\mathbf{0.768 \pm 0.077}$ & $\mathbf{1.09 \pm 0.34}$ \\
+            patch\_5\_adamw\_aug\_9 (Cross-Fold) & $0.806 \pm 0.104$ & $0.94 \pm 0.16$ & $0.796 \pm 0.089$ & $1.11 \pm 0.18$ & $0.696 \pm 0.100$ & $1.78 \pm 1.01$ & $0.600 \pm 0.109$ & $1.08 \pm 0.54$ & $0.724 \pm 0.091$ & $1.23 \pm 0.38$ \\
+            patch\_5\_adamw\_aug\_10 (Cross-Fold) & $0.772 \pm 0.116$ & $0.98 \pm 0.17$ & $0.663 \pm 0.133$ & $1.77 \pm 0.15$ & $0.508 \pm 0.124$ & $2.94 \pm 0.71$ & $0.415 \pm 0.092$ & $1.50 \pm 0.84$ & $0.590 \pm 0.098$ & $1.80 \pm 0.26$ \\
+            patch\_5\_adamw\_aug\_11 (Cross-Fold) & $0.799 \pm 0.105$ & $0.97 \pm 0.18$ & $0.777 \pm 0.091$ & $1.20 \pm 0.28$ & $0.664 \pm 0.118$ & $1.75 \pm 0.96$ & $0.545 \pm 0.116$ & $1.19 \pm 0.65$ & $0.696 \pm 0.097$ & $1.28 \pm 0.46$ \\
+            \bottomrule
+        \end{tabular}%
+    }
+\end{table*}

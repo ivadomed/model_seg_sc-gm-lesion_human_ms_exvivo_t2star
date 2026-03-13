@@ -1,0 +1,17 @@
+\begin{table*}[t]
+    \centering
+    \caption{Comparison of Dice and HD95 metrics (2D Results - mag_phase.csv). Best results are highlighted in bold.}
+    \label{tab:results}
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{lcccccccccc}
+            \toprule
+            & \multicolumn{2}{c}{\textbf{White Matter}} & \multicolumn{2}{c}{\textbf{Gray Matter}} & \multicolumn{2}{c}{\textbf{Lesion WM}} & \multicolumn{2}{c}{\textbf{Lesion GM}} & \multicolumn{2}{c}{\textbf{Total Average}} \\
+            \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+            \textbf{Config} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} & \textbf{Dice} & \textbf{HD95} \\
+            \midrule
+            base (Cross-Fold) & $\mathbf{0.848 \pm 0.087}$ & $\mathbf{0.78 \pm 0.35}$ & $0.819 \pm 0.067$ & $0.74 \pm 0.32$ & $0.729 \pm 0.040$ & $\mathbf{0.92 \pm 0.27}$ & $\mathbf{0.665 \pm 0.021}$ & $0.58 \pm 0.28$ & $\mathbf{0.766 \pm 0.041}$ & $\mathbf{0.76 \pm 0.28}$ \\
+            mag-one-channel (Cross-Fold) & $0.842 \pm 0.098$ & $0.92 \pm 0.39$ & $\mathbf{0.824 \pm 0.065}$ & $\mathbf{0.74 \pm 0.34}$ & $\mathbf{0.735 \pm 0.027}$ & $1.01 \pm 0.37$ & $0.641 \pm 0.051$ & $\mathbf{0.56 \pm 0.30}$ & $0.760 \pm 0.046$ & $0.81 \pm 0.32$ \\
+            \bottomrule
+        \end{tabular}%
+    }
+\end{table*}

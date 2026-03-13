@@ -19,8 +19,8 @@ set -x # Enable debugging
 # fi
 
 GPU_ID=0
-DATASET_ID=710
-EXPERIMENT_NAME=mag-one-channel
+DATASET_ID=717
+EXPERIMENT_NAME=winning_combination
 LABEL_MODE='all'
 DEBUG_FOLD= # Optional: 0, 1, 2, 3, or 4
 
@@ -77,7 +77,7 @@ echo "--- Starting 4-fold training in separate tmux windows... ---"
 
 # Fold 0
 sleep 1
-TRAIN_CMD_0="set_slot $GPU_ID bash -c 'bash run_training.sh 0 $GPU_ID $DATASET_ID'"
+TRAIN_CMD_0="set_slot 0 bash -c 'bash run_training.sh 0 0 $DATASET_ID'"
 tmux -S "$SOCKET_FILE" send-keys -t "$SESSION_NAME:fold_0" "$TRAIN_CMD_0" C-m
 
 # Folds 1-3
@@ -85,7 +85,7 @@ for FOLD in {1..3}
 do
     echo "Starting fold $FOLD..."
     tmux -S "$SOCKET_FILE" new-window -t "$SESSION_NAME" -n "fold_$FOLD"
-    TRAIN_CMD_N="set_slot $GPU_ID bash -c 'bash run_training.sh $FOLD $GPU_ID $DATASET_ID'"
+    TRAIN_CMD_N="set_slot $FOLD bash -c 'bash run_training.sh $FOLD $FOLD $DATASET_ID'"
     tmux -S "$SOCKET_FILE" send-keys -t "$SESSION_NAME:fold_$FOLD" "$TRAIN_CMD_N" C-m
 done
 

@@ -7,6 +7,7 @@ VENV_PATH=$2
 EXPERIMENT_NAME=$3
 SKIP_PREPROCESSING=$4
 CUSTOM_PATCH_SIZE=$5 # Format expected: "x,y,z"
+SMOOTHED_LABELS=$6
 
 # 1. Activate Environment
 source "${VENV_PATH}/bin/activate"
@@ -29,6 +30,12 @@ mkdir -p "$nnUNet_raw" "$nnUNet_preprocessed" "$nnUNet_results"
 
 # --- CHECK FOR MAG-ONLY FLAG ---
 if [[ "$EXPERIMENT_NAME" == *"mag-one-channel"* ]]; then
+    IS_MAG_ONLY=true
+else
+    IS_MAG_ONLY=false
+fi
+
+if [[ "$EXPERIMENT_NAME" == *"patch_5_adamw_mag_one_channel"* ]]; then
     IS_MAG_ONLY=true
 else
     IS_MAG_ONLY=false
@@ -63,6 +70,18 @@ if [ "$SKIP_PREPROCESSING" == "true" ]; then
             echo ">> [Setup] Copying ${BASE_DATASET_NAME} to ${DATASET_NAME}..."
             cp -r "${nnUNet_raw}/${BASE_DATASET_NAME}" "${nnUNet_raw}/${DATASET_NAME}"
             cp -r "${nnUNet_preprocessed}/${BASE_DATASET_NAME}" "${nnUNet_preprocessed}/${DATASET_NAME}"
+
+            ## if we have SMOOTHED_LABELS, copy them too and replace
+            if [ "$SMOOTHED_LABELS" == "true" ]; then
+                if [ -d "${nnUNet_raw}/smooth_labelsTr" ]; then
+                    echo ">> [Setup] Copying smooth labels to target dataset..."
+                    cp -r "${nnUNet_raw}/smooth_labelsTr" "${nnUNet_raw}/${BASE_DATASET_NAME}/labelsTr"
+                else
+                    ## Raise the error and stop
+                    echo "⚠️ Warning: Smooth labels directory not found."
+                    exit 1
+                fi
+            fi
         fi
     fi
 
@@ -82,7 +101,8 @@ else
         --bids "$BIDS_DATA_PATH" \
         --nnunet_raw "$nnUNet_raw" \
         --id $DATASET_ID \
-        --experiment_name "$EXPERIMENT_NAME"
+        --experiment_name "$EXPERIMENT_NAME" \
+        --use_smooth_labels $SMOOTHED_LABELS
     
     echo ">> [Setup] Planning and Preprocessing..."
     nnUNetv2_plan_and_preprocess -d $DATASET_ID -c 3d_fullres --verify_dataset_integrity

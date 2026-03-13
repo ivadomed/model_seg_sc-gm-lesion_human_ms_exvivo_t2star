@@ -8,18 +8,28 @@ FOLDS=(0 1 2 3)
 # Define your experiments here: [DATASET_ID]="EXPERIMENT_NAME"
 declare -A EXPERIMENT_MAP
 EXPERIMENT_MAP=( 
-    ["700"]="base" 
+    # ["700"]="base" 
     # ["701"]="soft_loss"
     # ["702"]="mosaic" ## never do mosaic, because of the sliding window, it doesn't make much sense
     # ["703"]="prepro_mag"
     # ["704"]="phase_prepro"
     # ["705"]="mag_prepro"
     # ["706"]="no_spatial_aug"
-    # ["707"]="merge_lesions"
+    # # ["707"]="merge_lesions"
+
+
     # ["708"]="base_no_otsu"
-    # ["709"]="wm_gm_segmentation"
+    # # ["709"]="wm_gm_segmentation"
     # ["710"]="mag-one-channel"
-    # ["stacking"]="stacking"
+    # ["711"]="soft_loss_fixed"
+    # ["712"]="soft_loss_2_fixed"
+
+    # ["713"]="soft_loss_3_fixed"
+    # ["714"]="spatial_aug_2"
+    # ["715"]="spatial_aug_3"
+    # ["716"]="sgd_optimizer"
+    # ["717"]="winning_combination" ## aug 2 and soft 2, do not yield the best results when combiend!!
+    ["stacking"]="stacking"
 )
 
 export nnUNet_raw=""
@@ -38,7 +48,7 @@ STACKING_TASK_NAME_2="merge_lesions"
 # --- Path Definitions ---
 PROJECT_ROOT="/home/ge.polymtl.ca/pahoa/nih_project"
 PATH_PROCESSED_TRAIN="${PROJECT_ROOT}/datasets/2D_datasets/train_datasets/processed_data_full_multichannel"
-PATH_PROCESSED_TEST="${PROJECT_ROOT}/datasets/2D_datasets/test_datasets/processed_test_set"
+PATH_PROCESSED_TEST="${PROJECT_ROOT}/datasets/2D_datasets/test_datasets/processed_test_set_dynamic"
 
 
 # 📂 VOLUME MODE CONFIGURATION
@@ -176,7 +186,8 @@ for DATASET_ID in "${!EXPERIMENT_MAP[@]}"; do
     # 3. TEST MODE (Standard Dataset)
     elif [ "$MODE" == "test" ]; then
         OUTPUT_ROOT_NAME="${EXPERIMENT}_TEST_SET"
-        PROCESS_PATHS=("$PATH_PROCESSED_TEST")
+        # Point to the specific imagesTr folder inside the dynamic test set structure
+        PROCESS_PATHS=("$PATH_PROCESSED_TEST/nnunet_raw/Dataset520_TEST_SET_AXIAL/imagesTr")
         RELATIVE_STRUCTURES=("") 
 
     else
@@ -219,9 +230,9 @@ for DATASET_ID in "${!EXPERIMENT_MAP[@]}"; do
                 -path "$CURRENT_INPUT_PATH" \
                 -folds "${FOLDS[@]}" \
                 -output_root "$GLOBAL_OUTPUT_ROOT" \
-                -rel_path "$CURRENT_REL_PATH" \
-                # --ensemble \
-                # --use_tta
+                -rel_path "$CURRENT_REL_PATH" 
+                # --use_tta \
+                # --ensemble
         fi
 
         echo "   ✅ Done."

@@ -23,6 +23,8 @@ def parse_args():
     parser.add_argument('--path-out', required=True, type=Path, help='Path to output directory.')
     parser.add_argument('--label-folder', required=True, type=Path,
                         help='Path to the folder containing the label files (can be absolute or relative to path-data).')
+    parser.add_argument('--axis', type=int, default=1, choices=[0, 1, 2],
+                        help="Axis to extract slices from (0=Sagittal/X, 1=Coronal/Y, 2=Axial/Z). Default is 1 (Y).")
     return parser.parse_args()
 
 def find_subject_folders(data_path):
@@ -35,7 +37,7 @@ def save_nifti_slice(data, affine, header, out_path):
     img = nib.Nifti1Image(data.astype(np.float32), affine, header)
     nib.save(img, str(out_path))
 
-def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
+def process_subject(subject_dir, label_base_path, output_dir, expected_labels, axis=1):
     """Processes a single subject, finding mag/phase pairs, and extracting labeled slices."""
     anat_path = subject_dir / 'anat'
     if not anat_path.exists(): return 0
@@ -77,7 +79,26 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
             continue # Skip to the next magnitude file
         # --- END OF SOLUTION ---
 
-        annotated_slice_indices = [i for i in range(main_label_data.shape[1]) if np.any(main_label_data[:, i, :])]
+        # Generic Slicing based on axis argument
+        # Slicing logic:
+        # if axis=0: slice on X -> data[i, :, :]
+        # if axis=1: slice on Y -> data[:, i, :]
+        # if axis=2: slice on Z -> data[:, :, i]
+        
+        # We check if there's any label in that slice
+        def has_label(data, idx, ax):
+            if ax == 0: return np.any(data[idx, :, :])
+            if ax == 1: return np.any(data[:, idx, :])
+            if ax == 2: return np.any(data[:, :, idx])
+            return False
+
+        def get_slice(data, idx, ax):
+            if ax == 0: return data[idx, :, :]
+            if ax == 1: return data[:, idx, :]
+            if ax == 2: return data[:, :, idx]
+            return None
+
+        annotated_slice_indices = [i for i in range(main_label_data.shape[axis]) if has_label(main_label_data, i, axis)]
         if not annotated_slice_indices:
             continue
         
@@ -90,9 +111,9 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
             mag_slice_fname = f"{base_name_for_label}_slice-{slice_idx}.nii.gz"
             phase_slice_fname = mag_slice_fname.replace('_part-mag_', '_part-phase_')
             
-            # This line will no longer crash because we've confirmed shapes match
-            save_nifti_slice(mag_data[:, slice_idx, :], mag_img.affine, mag_img.header, output_images_anat / mag_slice_fname)
-            save_nifti_slice(phase_data[:, slice_idx, :], phase_img.affine, phase_img.header, output_images_anat / phase_slice_fname)
+            # Use helper to get slice
+            save_nifti_slice(get_slice(mag_data, slice_idx, axis), mag_img.affine, mag_img.header, output_images_anat / mag_slice_fname)
+            save_nifti_slice(get_slice(phase_data, slice_idx, axis), phase_img.affine, phase_img.header, output_images_anat / phase_slice_fname)
 
             for label_type in expected_labels:
                 label_path = label_folder / f"{base_name_for_label}_label-{label_type}_seg.nii.gz"
@@ -100,7 +121,7 @@ def process_subject(subject_dir, label_base_path, output_dir, expected_labels):
                     label_img = nib.load(label_path)
                     # We can assume other labels also match if the primary one did
                     out_label_fname = f"{base_name_for_label}_slice-{slice_idx}_label-{label_type}_seg.nii.gz"
-                    save_nifti_slice(np.asarray(label_img.dataobj)[:, slice_idx, :], label_img.affine, label_img.header, output_labels_anat / out_label_fname)
+                    save_nifti_slice(get_slice(np.asarray(label_img.dataobj), slice_idx, axis), label_img.affine, label_img.header, output_labels_anat / out_label_fname)
             slice_count += 1
     return slice_count
 
@@ -116,10 +137,10 @@ def main():
     
     subject_folders = find_subject_folders(path_data)
     total_slices = 0
-    print(f"Found {len(subject_folders)} subjects. Starting slice extraction...")
+    print(f"Found {len(subject_folders)} subjects. Starting slice extraction on AXIS {args.axis} (0=X, 1=Y, 2=Z)...")
 
     for subject_dir in tqdm(subject_folders, desc="Overall Progress"):
-        count = process_subject(subject_dir, path_labels_in, path_out, args.labels)
+        count = process_subject(subject_dir, path_labels_in, path_out, args.labels, axis=args.axis)
         total_slices += count
 
     print("\nSearching for label definition file...")

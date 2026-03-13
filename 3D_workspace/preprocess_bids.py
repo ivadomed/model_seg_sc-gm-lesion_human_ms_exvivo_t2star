@@ -10,7 +10,7 @@ def save_json(obj, file, indent=4, sort_keys=True):
     with open(file, 'w') as f:
         json.dump(obj, f, sort_keys=sort_keys, indent=indent)
 
-def preprocess_and_split(bids_dir, nnunet_raw_dir, dataset_id, experiment_name):
+def preprocess_and_split(bids_dir, nnunet_raw_dir, dataset_id, experiment_name, use_smooth_labels=False):
     task_name = f"Dataset{dataset_id:03d}_MagPhase_{experiment_name}"
     out_base = os.path.join(nnunet_raw_dir, task_name)
     
@@ -24,7 +24,11 @@ def preprocess_and_split(bids_dir, nnunet_raw_dir, dataset_id, experiment_name):
         print(f"Experiment '{experiment_name}' detected. Running in DUAL CHANNEL (Magnitude + Phase) mode.")
 
     imagesTr = os.path.join(out_base, "imagesTr")
-    labelsTr = os.path.join(out_base, "labelsTr")
+    if use_smooth_labels:
+        labelsTr = os.path.join(nnunet_raw_dir, "smooth_labelsTr")
+    else:
+        labelsTr = os.path.join(out_base, "labelsTr")
+        
     os.makedirs(imagesTr, exist_ok=True)
     os.makedirs(labelsTr, exist_ok=True)
     
@@ -176,5 +180,6 @@ if __name__ == "__main__":
     parser.add_argument("--id", type=int, default=501)
     parser.add_argument("--experiment_name", type=str, default="")
     args = parser.parse_args()
+    parser.add_argument("--use_smooth_labels", type=bool, default=False)
     
-    preprocess_and_split(args.bids, args.nnunet_raw, args.id, args.experiment_name)
+    preprocess_and_split(args.bids, args.nnunet_raw, args.id, args.experiment_name, args.use_smooth_labels)
