@@ -24,7 +24,7 @@ from nnunetv2.imageio.simpleitk_reader_writer import SimpleITKIO
 from concurrent.futures import ThreadPoolExecutor
 
 current_file_path = Path(__file__).resolve()
-project_root = current_file_path.parent.parent.parent  # 3 levels up -> repo root (for helpers import)
+project_root = current_file_path.parent.parent  # 2D_workspace/inference_2D.py -> repo root (for helpers import)
 sys.path.append(str(project_root))
 print("[Info] Project root added to sys.path:", project_root)
 

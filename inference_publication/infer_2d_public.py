@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--checkpoint",
-        default="checkpoint_final.pth",
+        default="checkpoint_best.pth",
         help="Checkpoint filename in each fold folder.",
     )
     parser.add_argument("--gpu-id", type=int, default=0, help="GPU index (ignored on CPU).")

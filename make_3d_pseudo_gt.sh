@@ -22,7 +22,7 @@ for sub in "${SUBJECTS[@]}"; do
   for mag in "$CLEAN_DATASET/$sub/anat/"*_part-mag_T2star.nii.gz; do
     [ -e "$mag" ] || continue
     echo "  [$sub] $(basename "$mag")"
-    PYTHONPATH="$REPO_DIR" "$PY" 2D_workspace/inference/inference_2.py \
+    PYTHONPATH="$REPO_DIR" "$PY" 2D_workspace/inference_2D.py \
       -experiment pseudo_gt -model_folder "$MODEL" -mode volume -path "$mag" \
       -folds 0 1 2 3 -output_root "$OUT/$sub" -rel_path ""
   done

@@ -32,7 +32,7 @@ echo "=== infer 2D | exp=$EXP mode=$MODE folds=[$FOLDS] tta=${TTA:-no} legacy=${
 echo "    model -> $MODEL"
 echo "    path  -> $PATH_ARG"
 echo "    out   -> $OUT"
-PYTHONPATH="$REPO_DIR" "$PY" 2D_workspace/inference/inference_2.py \
+PYTHONPATH="$REPO_DIR" "$PY" 2D_workspace/inference_2D.py \
   -experiment "$EXP_NAME" -model_folder "$MODEL" -mode "$MODE" \
   -path "$PATH_ARG" -folds $FOLDS $TTA -output_root "$OUT"
 
