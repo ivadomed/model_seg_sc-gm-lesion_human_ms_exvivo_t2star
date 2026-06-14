@@ -1,0 +1,18 @@
+{
+  "dim": "2D",
+  "family": "channels",
+  "comment": "historical Dataset710",
+  "dataset": {
+    "id": 22,
+    "name": "2D_Mag1ch",
+    "channels": "mag-one-channel",
+    "label_mode": "all"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_mag_one_channel": true
+  }
+}

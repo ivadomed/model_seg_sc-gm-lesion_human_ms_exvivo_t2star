@@ -1,0 +1,18 @@
+{
+  "dim": "2D",
+  "family": "label_scheme",
+  "comment": "historical Dataset707",
+  "dataset": {
+    "id": 23,
+    "name": "2D_MergedLesion",
+    "channels": "mag_phase",
+    "label_mode": "merged_lesion"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_base": true
+  }
+}

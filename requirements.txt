@@ -1,15 +1,17 @@
-nnunetv2==2.5.1
-torch==2.3.1
-torchvision==0.18.1
-numpy==1.26.4
-scipy==1.13.1
-scikit-image==0.24.0
-scikit-learn==1.5.1
-pandas==2.2.2
-matplotlib==3.9.0
-SimpleITK==2.4.0
-nibabel==5.2.1
-tqdm==4.66.4
+# Pinned to the validated environment (matches the .venv the code was developed/tested on).
+# Regenerated from the live venv on 2026-06-14.
+nnunetv2==2.6.2
+torch==2.8.0
+torchvision==0.23.0
+numpy==2.3.3
+scipy==1.16.2
+scikit-image==0.25.2
+scikit-learn==1.7.2
+pandas==2.3.2
+matplotlib==3.10.6
+SimpleITK==2.5.2
+nibabel==5.3.2
+tqdm==4.67.1
 batchgenerators==0.25.1
-kornia==0.7.3
-wandb==0.17.5
+kornia==0.8.1
+wandb==0.21.4

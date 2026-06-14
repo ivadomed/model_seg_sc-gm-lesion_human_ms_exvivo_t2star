@@ -1,0 +1,18 @@
+{
+  "dim": "2D",
+  "family": "aug",
+  "comment": "historical Dataset715",
+  "dataset": {
+    "id": 21,
+    "name": "2D_MagPhase",
+    "channels": "mag_phase",
+    "label_mode": "all"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_spatial_aug_3": true
+  }
+}

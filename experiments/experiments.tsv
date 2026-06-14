@@ -1,0 +1,58 @@
+# Auto-generated from experiments/{2D,3D}/*.json. Run: set_slot 3 bash run_experiment_training_<dim>.sh <name> [fold]
+name	dim	family	base_dataset	driven_by
+base	2D	base_prepro	Dataset021_2D_MagPhase	exp_base
+base_no_otsu	2D	base_prepro	Dataset021_2D_MagPhase	exp_base_no_otsu
+mag_one_channel	2D	channels	Dataset022_2D_Mag1ch	exp_mag_one_channel
+mag_prepro	2D	base_prepro	Dataset021_2D_MagPhase	exp_mag_prepro
+merge_lesions	2D	label_scheme	Dataset023_2D_MergedLesion	exp_base
+mosaic	2D	aug	Dataset021_2D_MagPhase	exp_mosaic
+no_spatial_aug	2D	aug	Dataset021_2D_MagPhase	exp_no_spatial_aug
+phase_prepro	2D	base_prepro	Dataset021_2D_MagPhase	exp_phase_prepro
+prepro_mag	2D	base_prepro	Dataset021_2D_MagPhase	exp_mag_only
+sgd	2D	optimizer	Dataset021_2D_MagPhase	exp_SGD
+soft_loss	2D	loss	Dataset021_2D_MagPhase	exp_soft_loss
+soft_loss_1	2D	loss	Dataset021_2D_MagPhase	exp_soft_loss
+soft_loss_3	2D	loss	Dataset021_2D_MagPhase	exp_soft_loss
+spatial_aug_3	2D	aug	Dataset021_2D_MagPhase	exp_spatial_aug_3
+winning	2D	winning	Dataset021_2D_MagPhase	baseline
+wm_gm	2D	label_scheme	Dataset024_2D_Tissues	exp_base
+adamw_baseline	3D	adamw_baseline	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 64, 208]
+adamw_vs_sgd__adamw	3D	adamw_vs_sgd	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 64, 208]
+adamw_vs_sgd__sgd	3D	adamw_vs_sgd	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION,EXP_SGD_OPTIMIZER|patch=[192, 64, 208]
+aug_10	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_11	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_12	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_13	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_14	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_15	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_16	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_17	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_18	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_19	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_20	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_21	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_22	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_23	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_24	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_25	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_26	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_5	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_6	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_7	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_8	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_9	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+aug_no_rot_z	3D	aug_sweep	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+mag_one_channel	3D	channels	Dataset011_3D_MagPhase	EXP_MAG_ONE_CHANNEL
+mag_only	3D	channels	Dataset012_3D_Mag	EXP_SPATIAL_AUGMENTATION
+mag_prepro	3D	adamw_prepro	Dataset011_3D_MagPhase	EXP_MAG_PREPRO
+otsu	3D	adamw_prepro	Dataset011_3D_MagPhase	EXP_OTSU
+patch_192x64x160	3D	patch	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 64, 160]
+patch_192x96x160	3D	patch	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 96, 160]
+patch_4	3D	patch	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 96, 208]
+patch_5	3D	patch	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION|patch=[192, 64, 208]
+patch_default	3D	patch	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+phase_prepro	3D	adamw_prepro	Dataset011_3D_MagPhase	EXP_PHASE_PREPRO
+soft_loss_3	3D	adamw_loss	Dataset011_3D_MagPhase	EXP_SOFT_EDGE_LOSS_3
+spatial_aug_3	3D	adamw_aug	Dataset011_3D_MagPhase	EXP_SPATIAL_AUGMENTATION
+noise_transfer	3D	noise_transfer	(frozen)	paper_results: Dataset2000-2012
+early_preadamw	3D	early	(frozen)	paper_results: Dataset1713-1717

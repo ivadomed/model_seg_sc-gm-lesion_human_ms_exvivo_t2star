@@ -1,0 +1,19 @@
+{
+  "family": "channels",
+  "comment": "historical Dataset1700 (single-channel magnitude)",
+  "dataset": {
+    "id": 12,
+    "name": "3D_Mag",
+    "channels": "mag"
+  },
+  "configuration": "3d_fullres",
+  "trainer": "nnUnet3DCustomTrainer",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 200,
+    "EXP_SPATIAL_AUGMENTATION": true,
+    "EXP_SPATIAL_AUGMENTATION_ID": 12,
+    "EXP_SGD_OPTIMIZER": false
+  },
+  "dim": "3D"
+}

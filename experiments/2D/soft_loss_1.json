@@ -1,0 +1,36 @@
+{
+  "dim": "2D",
+  "family": "loss",
+  "comment": "historical Dataset soft_loss variant 1",
+  "dataset": {
+    "id": 21,
+    "name": "2D_MagPhase",
+    "channels": "mag_phase",
+    "label_mode": "all"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_soft_loss": true,
+    "edge_params": {
+      "1": {
+        "edge_weight": 0.9,
+        "kernel_size": 7
+      },
+      "2": {
+        "edge_weight": 0.9,
+        "kernel_size": 3
+      },
+      "3": {
+        "edge_weight": 0.6,
+        "kernel_size": 5
+      },
+      "4": {
+        "edge_weight": 0.4,
+        "kernel_size": 7
+      }
+    }
+  }
+}
