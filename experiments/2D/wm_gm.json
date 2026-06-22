@@ -1,0 +1,18 @@
+{
+  "dim": "2D",
+  "family": "label_scheme",
+  "comment": "historical Dataset709",
+  "dataset": {
+    "id": 24,
+    "name": "2D_Tissues",
+    "channels": "mag_phase",
+    "label_mode": "tissues"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_base": true
+  }
+}

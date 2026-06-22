@@ -1,0 +1,36 @@
+{
+  "dim": "2D",
+  "family": "loss",
+  "comment": "historical Dataset713 (edge_params v3)",
+  "dataset": {
+    "id": 21,
+    "name": "2D_MagPhase",
+    "channels": "mag_phase",
+    "label_mode": "all"
+  },
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 1000,
+    "exp_soft_loss": true,
+    "edge_params": {
+      "1": {
+        "edge_weight": 0.7,
+        "kernel_size": 5
+      },
+      "2": {
+        "edge_weight": 0.6,
+        "kernel_size": 3
+      },
+      "3": {
+        "edge_weight": 0.2,
+        "kernel_size": 3
+      },
+      "4": {
+        "edge_weight": 0.2,
+        "kernel_size": 3
+      }
+    }
+  }
+}

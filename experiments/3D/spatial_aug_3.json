@@ -1,0 +1,19 @@
+{
+  "family": "adamw_aug",
+  "comment": "historical Dataset1723",
+  "dataset": {
+    "id": 11,
+    "name": "3D_MagPhase",
+    "channels": "mag_phase"
+  },
+  "configuration": "3d_fullres",
+  "trainer": "nnUnet3DCustomTrainer",
+  "plans": "nnUNetPlans",
+  "trainer_config": {
+    "num_epochs": 200,
+    "EXP_SPATIAL_AUGMENTATION": true,
+    "EXP_SPATIAL_AUGMENTATION_ID": 3,
+    "EXP_SGD_OPTIMIZER": false
+  },
+  "dim": "3D"
+}

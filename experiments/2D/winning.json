@@ -1,0 +1,10 @@
+{
+  "dim": "2D",
+  "family": "winning",
+  "comment": "Published 2D model (Dataset717 winning_combination): mag+phase, label-mode all.",
+  "dataset": {"id": 21, "name": "2D_MagPhase", "channels": "mag_phase", "label_mode": "all"},
+  "configuration": "2d",
+  "trainer": "nnUNetTrainerWandb",
+  "plans": "nnUNetPlans",
+  "trainer_config": {"num_epochs": 1000}
+}

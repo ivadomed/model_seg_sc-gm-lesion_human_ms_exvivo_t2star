@@ -1,0 +1,24 @@
+{
+  "dim": "3D",
+  "family": "patch",
+  "comment": "patch sweep [192, 64, 160] (shared preprocessing)",
+  "dataset": {
+    "id": 11,
+    "name": "3D_MagPhase",
+    "channels": "mag_phase"
+  },
+  "configuration": "3d_fullres",
+  "trainer": "nnUnet3DCustomTrainer",
+  "plans": "nnUNetPlans",
+  "patch_size": [
+    192,
+    64,
+    160
+  ],
+  "trainer_config": {
+    "num_epochs": 200,
+    "EXP_SPATIAL_AUGMENTATION": true,
+    "EXP_SPATIAL_AUGMENTATION_ID": 12,
+    "EXP_SGD_OPTIMIZER": false
+  }
+}
