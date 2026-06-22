@@ -141,22 +141,3 @@ bash inference_publication/run_infer_2d_public.sh <input_dir> <output_dir> <mode
 # Or call the Python entrypoint directly:
 python inference_publication/infer_3d_public.py --input-dir IN --output-dir OUT --model-folder MODEL --folds 0 1 2 3 --overwrite
 ```
-
----
-
-## Citation (placeholder)
-
-```bibtex
-@article{PLACEHOLDER_202X,
-  title   = {PLACEHOLDER_TITLE},
-  author  = {PLACEHOLDER_AUTHORS},
-  journal = {PLACEHOLDER_JOURNAL},
-  year    = {202X},
-  doi     = {PLACEHOLDER_DOI}
-}
-```
-
-## Data access & weights (placeholder)
-
-- **Dataset**: `ms-exvivo-nih` — `PLACEHOLDER_DATASET_STATEMENT` / access: `PLACEHOLDER_ACCESS_POLICY` / `PLACEHOLDER_LINK_OR_EMAIL`
-- **Released weights**: `PLACEHOLDER_RELEASE_URL` (3D: `PLACEHOLDER_3D_MODEL_FOLDER`, 2D: `PLACEHOLDER_2D_MODEL_FOLDER`)
