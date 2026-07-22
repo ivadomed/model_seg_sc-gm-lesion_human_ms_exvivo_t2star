@@ -6,7 +6,8 @@ image bytes: imagesTr/labelsTr are SYMLINKS into ms-exvivo-nih.
 The 12 training subjects' ``derivatives/pseudo_labels_3d`` files are already combined multiclass
 volumes {0:bg,1:WM,2:GM,3:lesionWM,4:lesionGM} in correct orientation (the weakly-supervised
 pseudo-GT), so they are used directly as the nnUNet label -- no derivation, no copy. The 3
-test subjects (separate SC/GM/lesion GT) are excluded from training.
+test subjects are excluded from training; their ground truth is the per-slice SC/GM/lesion
+labels under ``derivatives/labels_2d`` (NOT pseudo_labels_3d) -- point evaluation there.
 
 Case IDs are assigned in sorted (subject, acquisition) order and the 4-fold subject split is
 regenerated with KFold(seed=12345) -- identical partition to the historical pipeline, so the
