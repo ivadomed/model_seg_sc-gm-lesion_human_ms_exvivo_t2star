@@ -47,10 +47,26 @@ cd ../ms-exvivo-nih && git annex get . && cd -
   That matches the distillation scripts' default `--teacher` path exactly — no override needed.
 
   The release only has the trained weights, not the *preprocessed training data* the distillation
-  logits get cached against — you still need (b) done, plus a quick preprocessing pass (no need to
-  actually train): `NNUNET_NUM_EPOCHS=1 set_slot 3 bash run_experiment_training_3D.sh adamw_baseline 0`
-  builds + preprocesses Dataset011 and generates the patch-192x64x208 plans in a few minutes; the
-  1-epoch fold it trains is throwaway — the released weights are your real teacher, not that checkpoint.
+  logits get cached against — you still need (b) done, plus preprocessing. No training is needed for
+  this part at all (run from the repo root):
+  ```bash
+  set_slot 3 bash -c '
+    source paths.sh
+    "$PY" 3D_workspace/dataset_prep/build_dataset_3d.py --clean-root "$CLEAN_DATASET" --out-raw "$nnUNet_raw" --dataset-id 11 --name 3D_MagPhase --channels mag_phase
+    "$NNUNET_BIN/nnUNetv2_plan_and_preprocess" -d 11 -c 3d_fullres --verify_dataset_integrity
+    PYTHONPATH="$REPO_DIR" "$PY" -m helpers.make_splits --dataset-dir "$nnUNet_raw/Dataset011_3D_MagPhase" --canonical "$REPO_DIR/splits/subject_split_3D.json" --inject
+    cp "$nnUNet_raw/Dataset011_3D_MagPhase/splits_final.json" "$nnUNet_preprocessed/Dataset011_3D_MagPhase/splits_final.json"
+  '
+  ```
+  Then reuse the release's own `plans.json` as the student's source plans — it already has the right
+  `patch_size` baked in and shares `data_identifier: nnUNetPlans_3d_fullres` with what plain
+  preprocessing just produced, so there's no need to separately regenerate a patch-collapsed plans
+  variant:
+  ```bash
+  cp Dataset1718_MagPhase_patchsize_5_adamw/nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres/plans.json \
+     ../nnUNet_data/nnUNet_preprocessed/Dataset011_3D_MagPhase/nnUNetPlans_p192x64x208.json
+  ```
+  (that's step 2's default `--src-plans` filename, so step 2 below needs no extra flag either).
 
 - **Alternative: retrain it yourself** (needs (a) and (b) done first; ~10h/fold on a single GPU):
   ```bash
