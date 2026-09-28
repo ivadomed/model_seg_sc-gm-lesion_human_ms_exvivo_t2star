@@ -1,0 +1,9 @@
+{
+  "comment": "Control: smaller student, supervised only, no distillation.",
+  "num_epochs": 200,
+  "EXP_SPATIAL_AUGMENTATION": true,
+  "EXP_SPATIAL_AUGMENTATION_ID": 12,
+  "EXP_SGD_OPTIMIZER": false,
+  "KD_WEIGHT": 0.0,
+  "SUP_WEIGHT": 1.0
+}

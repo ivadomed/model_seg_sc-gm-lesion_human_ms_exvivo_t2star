@@ -1,0 +1,11 @@
+{
+  "comment": "Distillation student: smaller 3D nnU-Net + KD, T=2 default. Override KD_TEMPERATURE via env var for a sweep.",
+  "num_epochs": 200,
+  "EXP_SPATIAL_AUGMENTATION": true,
+  "EXP_SPATIAL_AUGMENTATION_ID": 12,
+  "EXP_SGD_OPTIMIZER": false,
+  "KD_TEMPERATURE": 2.0,
+  "KD_WEIGHT": 1.0,
+  "SUP_WEIGHT": 1.0,
+  "TEACHER_LOGITS_DIR": "teacher_logits__patchsize_5_adamw"
+}

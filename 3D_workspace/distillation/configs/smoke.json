@@ -1,0 +1,13 @@
+{
+  "comment": "Fast wiring check: 2 epochs x 5 iters. Run with KD_WEIGHT=0 to also smoke-test the control path.",
+  "num_epochs": 2,
+  "num_iterations_per_epoch": 5,
+  "num_val_iterations_per_epoch": 2,
+  "EXP_SPATIAL_AUGMENTATION": true,
+  "EXP_SPATIAL_AUGMENTATION_ID": 12,
+  "EXP_SGD_OPTIMIZER": false,
+  "KD_TEMPERATURE": 2.0,
+  "KD_WEIGHT": 1.0,
+  "SUP_WEIGHT": 1.0,
+  "TEACHER_LOGITS_DIR": "teacher_logits__patchsize_5_adamw"
+}
