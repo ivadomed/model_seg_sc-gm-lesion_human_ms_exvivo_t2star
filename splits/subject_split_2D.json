@@ -1,0 +1,10 @@
+{
+  "_comment": "Canonical subject-level 4-fold cross-validation split used to TRAIN the paper's models. Reproduces the published cross-fold numbers (verified). Recovered from 2D_workspace create_subject_split.py logic (sorted subjects, no shuffle, np.array_split into 4) and confirmed empirically against the trained models (held-out lesion Dice). The unit is the SUBJECT (spinal cord); materialize per-dataset case-level splits with helpers/make_splits.py using that dataset's inference_manifest.json.",
+  "num_folds": 4,
+  "folds": {
+    "0": ["sub-PML014", "sub-PML019", "sub-PML023"],
+    "1": ["sub-PML024", "sub-TNU003", "sub-TNU004"],
+    "2": ["sub-TNU008", "sub-TNU009", "sub-TNU010"],
+    "3": ["sub-TNU012", "sub-TNU014", "sub-TNU017"]
+  }
+}

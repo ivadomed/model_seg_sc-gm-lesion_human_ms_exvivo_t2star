@@ -24,7 +24,8 @@ echo "    results -> $nnUNet_results"
     --dataset-id "$DATASET_ID" --name "$DATASET_NAME" --label-mode "$DATASET_LABEL_MODE" --channels "$DATASET_CHANNELS"; }
 # 2) preprocess
 [ -d "$DS_PP/${PLANS}_${CONFIGURATION}" ] || { echo "[preprocess]"; "$NNUNET_BIN/nnUNetv2_plan_and_preprocess" -d "$DATASET_ID" -c "$CONFIGURATION" --verify_dataset_integrity; }
-# 3) ALWAYS inject our 4-fold subject split
+# 3) ALWAYS inject our canonical 4-fold SUBJECT split (the split the paper's models used; see splits/)
+PYTHONPATH="$REPO_DIR" "$PY" -m helpers.make_splits --dataset-dir "$DS_RAW" --canonical "$REPO_DIR/splits/subject_split_2D.json" --inject
 cp "$DS_RAW/splits_final.json" "$DS_PP/splits_final.json"
 # 4) train
 echo "[train] nnUNetv2_train $DATASET_ID $CONFIGURATION $FOLD -tr $TRAINER -p $PLANS"

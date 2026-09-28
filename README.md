@@ -90,6 +90,14 @@ set_slot 3 bash run_experiment_inference_3D.sh <exp> <input_dir> --gt /path/to/g
 python -m helpers.eval --pred-dir P --gt-dir G              # standalone, on any predictions
 ```
 
+### Revision analyses (subject-level stats + dense 3D-GT eval)
+
+MELBA-revision additions: subject-level paired statistics on the ablation tables
+(`run_subject_stats_campaign_{2D,3D}.sh`) and the dense 3D ground-truth evaluation of the winning
+models on the annotated chunk (`run_eval_winning_dense_chunk.sh`). The canonical subject splits the
+paper's models were trained with live in `splits/` (see `splits/README.md`; materialize per-dataset
+with `helpers/make_splits.py`).
+
 ### Statistical comparison of two methods
 
 **Paired, per-subject** comparison (the correct unit: with subject-level k-fold CV each subject is held out

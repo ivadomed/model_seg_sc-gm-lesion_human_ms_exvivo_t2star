@@ -23,7 +23,8 @@ echo "    results -> $nnUNet_results"
     --clean-root "$CLEAN_DATASET" --out-raw "$nnUNet_raw" --dataset-id "$DATASET_ID" --name "$DATASET_NAME" --channels "$DATASET_CHANNELS"; }
 # 2) preprocess for this configuration
 [ -d "$DS_PP/${PLANS}_${CONFIGURATION}" ] || { echo "[preprocess]"; "$NNUNET_BIN/nnUNetv2_plan_and_preprocess" -d "$DATASET_ID" -c "$CONFIGURATION" --verify_dataset_integrity; }
-# 3) ALWAYS inject our 4-fold subject split (nnUNet writes its own 5-fold otherwise)
+# 3) ALWAYS inject our canonical 4-fold SUBJECT split (nnUNet writes its own 5-fold otherwise; see splits/)
+PYTHONPATH="$REPO_DIR" "$PY" -m helpers.make_splits --dataset-dir "$DS_RAW" --canonical "$REPO_DIR/splits/subject_split_3D.json" --inject
 cp "$DS_RAW/splits_final.json" "$DS_PP/splits_final.json"
 # 3b) optional patch-size variant (collapsed patch sweep), reusing the same preprocessing
 [ -n "${PATCH_SIZE:-}" ] && { PLANS=$("$PY" experiments/make_patch_plans.py "$DS_PP" "$PLANS" "$CONFIGURATION" "$PATCH_SIZE" | tr -d '\r'); echo "[patch] plans=$PLANS ($PATCH_SIZE)"; }

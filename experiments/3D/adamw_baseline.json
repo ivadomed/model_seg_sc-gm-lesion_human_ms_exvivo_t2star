@@ -1,7 +1,7 @@
 {
   "dim": "3D",
   "family": "adamw_baseline",
-  "comment": "Production 3D lineage (Dataset1718): mag+phase, AdamW, spatial aug 12. Patch variants handled via plans-level sweep.",
+  "comment": "Winning 3D config (Dataset1718): mag+phase, AdamW, NO spatial augmentation, hard labels. Verified 2026-09-23 against the original paper_results/3D/ablations/base3d checkpoint's own stored debug.json (EXP_SPATIAL_AUGMENTATION_1/2 both False there). Previously this file incorrectly left EXP_SPATIAL_AUGMENTATION on the trainer's default (True, id 12) -- do not remove this override.",
   "dataset": {
     "id": 11,
     "name": "3D_MagPhase",
@@ -12,8 +12,7 @@
   "plans": "nnUNetPlans",
   "trainer_config": {
     "num_epochs": 200,
-    "EXP_SPATIAL_AUGMENTATION": true,
-    "EXP_SPATIAL_AUGMENTATION_ID": 12,
+    "EXP_SPATIAL_AUGMENTATION": false,
     "EXP_SGD_OPTIMIZER": false
   },
   "patch_size": [
