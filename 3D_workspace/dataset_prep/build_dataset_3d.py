@@ -3,10 +3,11 @@
 Build a 3D nnUNet_raw dataset from the clean ms-exvivo-nih source WITHOUT duplicating
 image bytes: imagesTr/labelsTr are SYMLINKS into ms-exvivo-nih.
 
-The 12 training subjects' ``derivatives/labels_3d`` files are already combined multiclass
+The 12 training subjects' ``derivatives/pseudo_labels_3d`` files are already combined multiclass
 volumes {0:bg,1:WM,2:GM,3:lesionWM,4:lesionGM} in correct orientation (the weakly-supervised
 pseudo-GT), so they are used directly as the nnUNet label -- no derivation, no copy. The 3
-test subjects (separate SC/GM/lesion GT) are excluded from training.
+test subjects are excluded from training; their ground truth is the per-slice SC/GM/lesion
+labels under ``derivatives/labels_2d`` (NOT pseudo_labels_3d) -- point evaluation there.
 
 Case IDs are assigned in sorted (subject, acquisition) order and the 4-fold subject split is
 regenerated with KFold(seed=12345) -- identical partition to the historical pipeline, so the
@@ -21,7 +22,7 @@ from __future__ import annotations
 import argparse, json, os, glob, re
 from sklearn.model_selection import KFold
 
-DERIV = "derivatives/labels_3d"
+DERIV = "derivatives/pseudo_labels_3d"
 LABELS_4CLASS = {"background": 0, "WM": 1, "GM": 2, "lesion_WM": 3, "lesion_GM": 4}
 DEFAULT_TEST = ["sub-TNU018", "sub-TNU025", "sub-TNU026"]
 
