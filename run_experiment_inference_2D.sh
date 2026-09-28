@@ -19,7 +19,8 @@ eval "$("$PY" experiments/load_config.py "experiments/2D/${EXP}.json" | tr -d '\
 DS="Dataset$(printf %03d "$DATASET_ID")_${DATASET_NAME}"
 
 if [ -n "$LEGACY" ]; then
-  MODEL="$nnUNet_results/paper_results/2D/winning/winning_combination/nnUNetTrainerWandb__nnUNetPlans__2d"
+  # default: the published winning model; override per-config via LEGACY_MODEL=<paper_results model folder>
+  MODEL="${LEGACY_MODEL:-$nnUNet_results/paper_results/2D/ablations/synergy_aug2_soft2/nnUNetTrainerWandb__nnUNetPlans__2d}"
 else
   MODEL="$nnUNet_results/2D/${EXP_FAMILY}/${EXP_NAME}/$DS/${TRAINER}__${PLANS}__2d"
 fi

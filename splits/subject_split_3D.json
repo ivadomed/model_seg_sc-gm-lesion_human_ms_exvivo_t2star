@@ -1,0 +1,10 @@
+{
+  "_comment": "Subject-level 4-fold split used to TRAIN the paper's 3D models (Dataset011). DIFFERENT from the 2D split (subject_split_2D.json): the 3D build used a shuffled assignment. Recovered from the stored held-out predictions_3d (each MagPhase volume sits in its held-out fold) and verified: re-scoring reproduces the paper's 3D lesion numbers. 3D subject-stats read the stored predictions directly, so this file is for provenance/reproducibility.",
+  "num_folds": 4,
+  "folds": {
+    "0": ["sub-PML014", "sub-PML024", "sub-TNU010"],
+    "1": ["sub-TNU009", "sub-TNU014", "sub-TNU017"],
+    "2": ["sub-TNU003", "sub-TNU008", "sub-TNU012"],
+    "3": ["sub-PML019", "sub-PML023", "sub-TNU004"]
+  }
+}
