@@ -41,10 +41,10 @@ cd ../ms-exvivo-nih && git annex get . && cd -
 ## Run inference with the released model
 
 ```bash
-curl -LO https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases/download/v1.0.0/Dataset1718_MagPhase_patchsize_5_adamw.zip
-unzip Dataset1718_MagPhase_patchsize_5_adamw.zip
+curl -LO https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases/download/r20261002/Dataset011_3D_MagPhase_adamw_baseline.zip
+unzip Dataset011_3D_MagPhase_adamw_baseline.zip
 bash inference_publication/run_infer_3d_public.sh <input_dir> <output_dir> \
-  Dataset1718_MagPhase_patchsize_5_adamw/nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres
+  Dataset011_3D_MagPhase_adamw_baseline/nnUnet3DCustomTrainer__nnUNetPlans_p192x64x208__3d_fullres
 ```
 
 `<input_dir>` is an nnU-Net `imagesTs`-style folder: `CASE_0000.nii.gz` (magnitude) [+ `CASE_0001.nii.gz` (phase)].
