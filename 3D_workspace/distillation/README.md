@@ -9,10 +9,79 @@ scripts/    everything you run, in pipeline order
 configs/    one JSON per training condition
 ```
 
+## 0. Setup (fresh machine)
+
+Everything below runs under `set_slot <N>` (this lab's cluster GPU/CPU/RAM reservation tool). If
+your machine doesn't have `set_slot`, drop that prefix and run the command directly.
+
+**a) Code + Python env** (from the repo root, one level up from `3D_workspace/`):
+```bash
+python -m venv ../.venv && source ../.venv/bin/activate && pip install -r requirements.txt
+set_slot 3 bash install_trainers.sh   # base 3D trainer -> venv (required before step (c) below)
+```
+Needs Python 3.12 and `git-annex` installed on the machine.
+
+**b) Data** (git-annex; ask for access to the lab's data server first):
+```bash
+git clone git@data.neuro.polymtl.ca:datasets/ms-exvivo-nih ../ms-exvivo-nih
+cd ../ms-exvivo-nih && git annex get . && cd -
+```
+`paths.sh` expects this at `../ms-exvivo-nih` relative to the repo (override with `CLEAN_DATASET=...`).
+~41 GB.
+
+**c) The teacher.** The distillation scripts default to reusing an *already-trained* teacher at
+`nnUNet_data/nnUNet_results/paper_results/3D/ablations/base3d/nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres/`
+— that's a frozen archive copy, not something any command regenerates for you. You have two options:
+
+- **Recommended: download the published weights** from the repo's
+  [GitHub release](https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases/tag/v1.0.0)
+  (`Dataset1718_MagPhase_patchsize_5_adamw.zip`, ~1.3 GB, verified byte-identical to the checkpoints
+  these distillation results were produced with):
+  ```bash
+  curl -LO https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases/download/v1.0.0/Dataset1718_MagPhase_patchsize_5_adamw.zip
+  unzip Dataset1718_MagPhase_patchsize_5_adamw.zip
+  mkdir -p ../nnUNet_data/nnUNet_results/paper_results/3D/ablations/base3d
+  mv Dataset1718_MagPhase_patchsize_5_adamw/nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres \
+     ../nnUNet_data/nnUNet_results/paper_results/3D/ablations/base3d/
+  ```
+  That matches the distillation scripts' default `--teacher` path exactly — no override needed.
+
+  The release only has the trained weights, not the *preprocessed training data* the distillation
+  logits get cached against — you still need (b) done, plus preprocessing. No training is needed for
+  this part at all (run from the repo root):
+  ```bash
+  set_slot 3 bash -c '
+    source paths.sh
+    "$PY" 3D_workspace/dataset_prep/build_dataset_3d.py --clean-root "$CLEAN_DATASET" --out-raw "$nnUNet_raw" --dataset-id 11 --name 3D_MagPhase --channels mag_phase
+    "$NNUNET_BIN/nnUNetv2_plan_and_preprocess" -d 11 -c 3d_fullres --verify_dataset_integrity
+    PYTHONPATH="$REPO_DIR" "$PY" -m helpers.make_splits --dataset-dir "$nnUNet_raw/Dataset011_3D_MagPhase" --canonical "$REPO_DIR/splits/subject_split_3D.json" --inject
+    cp "$nnUNet_raw/Dataset011_3D_MagPhase/splits_final.json" "$nnUNet_preprocessed/Dataset011_3D_MagPhase/splits_final.json"
+  '
+  ```
+  Then reuse the release's own `plans.json` as the student's source plans — it already has the right
+  `patch_size` baked in and shares `data_identifier: nnUNetPlans_3d_fullres` with what plain
+  preprocessing just produced, so there's no need to separately regenerate a patch-collapsed plans
+  variant:
+  ```bash
+  cp Dataset1718_MagPhase_patchsize_5_adamw/nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres/plans.json \
+     ../nnUNet_data/nnUNet_preprocessed/Dataset011_3D_MagPhase/nnUNetPlans_p192x64x208.json
+  ```
+  (that's step 2's default `--src-plans` filename, so step 2 below needs no extra flag either).
+
+- **Alternative: retrain it yourself** (needs (a) and (b) done first; ~10h/fold on a single GPU):
+  ```bash
+  for fold in 0 1 2 3; do
+    set_slot 3 bash run_experiment_training_3D.sh adamw_baseline $fold
+  done
+  ```
+  This lands at a **different path** than the release download:
+  `nnUNet_data/nnUNet_results/3D/adamw_baseline/adamw_baseline/Dataset011_3D_MagPhase/nnUnet3DCustomTrainer__nnUNetPlans_p192x64x208__3d_fullres/`.
+  Pass `--teacher <that path>` in step 1 below (the script's default won't match).
+
 ## 1. Cache the teacher's soft targets (once)
 
 ```bash
-python scripts/01_prepare/01_precompute_teacher_logits.py
+python scripts/01_prepare/01_precompute_teacher_logits.py   # add --teacher <path> if you retrained (see 0c)
 ```
 
 Writes one float16 logits `.b2nd` per training case to
