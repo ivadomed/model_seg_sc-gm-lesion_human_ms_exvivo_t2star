@@ -3,8 +3,20 @@
 Segmentation of spinal cord **white matter**, **gray matter**, and **MS lesions** from high-resolution
 **ex vivo** GRE magnitude + phase MRI (nnU-Net based).
 
-- **3D model** — recommended, reported results.
-- **2D model** — companion/ablation model.
+Two models are trained: a **3D model** (use this one — best results, what the paper reports) and a
+**2D model** (used internally to bootstrap the 3D model's training labels; kept for the paper's ablations,
+not meant for general use).
+
+![Magnitude, phase, and the resulting WM/GM/lesion segmentation](doc/example_segmentation.png)
+![Example on a lesion-containing test case: image, prediction, ground truth](doc/example_lesion.png)
+
+### Results (3D model, cross-validation, mean ± std over subjects)
+
+| WM Dice | GM Dice | Lesion (WM) Dice | Lesion (GM) Dice |
+|---|---|---|---|
+| 0.901 ± 0.053 | 0.866 ± 0.050 | 0.545 ± 0.319 | 0.443 ± 0.282 |
+
+Full results, ablations, and methods: [arxiv.org/abs/2605.12753](https://arxiv.org/abs/2605.12753).
 
 ## Setup
 
@@ -29,13 +41,14 @@ cd ../ms-exvivo-nih && git annex get . && cd -
 ## Run inference with the released model
 
 ```bash
-# download and unzip a released model from https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases
-bash inference_publication/run_infer_3d_public.sh <input_dir> <output_dir> <model_folder>
+curl -LO https://github.com/ivadomed/model_seg_sc-gm-lesion_human_ms_exvivo_t2star/releases/download/r20261002/Dataset011_3D_MagPhase_adamw_baseline.zip
+unzip Dataset011_3D_MagPhase_adamw_baseline.zip
+bash inference_publication/run_infer_3d_public.sh <input_dir> <output_dir> \
+  Dataset011_3D_MagPhase_adamw_baseline/nnUnet3DCustomTrainer__nnUNetPlans_p192x64x208__3d_fullres
 ```
 
 `<input_dir>` is an nnU-Net `imagesTs`-style folder: `CASE_0000.nii.gz` (magnitude) [+ `CASE_0001.nii.gz` (phase)].
 Add `--tta` for test-time augmentation; override GPU/checkpoint with `GPU_ID=1 CHECKPOINT=checkpoint_final.pth`.
-The 2D companion model works the same way via `run_infer_2d_public.sh`.
 
 ## Reproduce the paper's experiments
 
@@ -67,4 +80,17 @@ helpers/                            shared code: metrics, config loading, splits
 splits/                             the paper's 4-fold subject splits
 tests/                              smoke test
 doc/                                figures
+```
+
+## Citation
+
+```bibtex
+@misc{hoareau2026optimization,
+  title={Optimization in Sparse 2D to Dense 3D Weakly Supervised Learning: Application to Multi-Label Segmentation of Large ex vivo MRI Data},
+  author={Hoareau, Paul and Wang, Kuan Yi and Bujak, Brandon and Sun, Roy and Nair, Govind and Cortese, Irene and Tsagkas, Charidimos and Reich, Daniel S. and Cohen-Adad, Julien},
+  year={2026},
+  eprint={2605.12753},
+  archivePrefix={arXiv},
+  url={https://arxiv.org/abs/2605.12753}
+}
 ```
