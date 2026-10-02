@@ -5,7 +5,7 @@
 # Dice/HD95 + inter-slice smoothness DSC_z + lesion connected-component counts (helpers/dense_metrics.py).
 # Both models use their published ensemble(+TTA) inference. Runs under set_slot; two GPUs in parallel.
 set -euo pipefail
-cd "$(dirname "$0")"; source paths.sh
+cd "$(dirname "$0")/.."; source paths.sh
 SUB="sub-TNU026_acq-S1_part-mag_T2star"
 SRC="$CLEAN_DATASET/sub-TNU026/anat"
 GT="$CLEAN_DATASET/derivatives/labels_3d/sub-TNU026/anat/${SUB}.nii.gz"

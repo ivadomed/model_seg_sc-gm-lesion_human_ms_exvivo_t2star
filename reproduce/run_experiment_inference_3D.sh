@@ -15,8 +15,8 @@ shift 2
 while [ $# -gt 0 ]; do case "$1" in
   --no-tta) TTA_FLAG="--disable_tta"; TAG="notta";; --single-fold) FOLDS="0"; ENS="fold0";;
   --gt) GT="$2"; shift;; *) echo "unknown flag $1"; exit 1;; esac; shift; done
-cd "$(dirname "$0")"; source paths.sh
-eval "$("$PY" experiments/load_config.py "experiments/3D/${EXP}.json" | tr -d '\r')"
+cd "$(dirname "$0")/.."; source paths.sh
+eval "$("$PY" helpers/load_config.py "3D_workspace/experiments/${EXP}.json" | tr -d '\r')"
 # patch-variant experiments were trained under a variant plans name -> match it at inference
 [ -n "${PATCH_SIZE:-}" ] && PLANS="${PLANS}_p$(echo "$PATCH_SIZE" | tr ',' 'x')"
 export nnUNet_results="$PROJECT_ROOT/nnUNet_data/nnUNet_results/${EXP_DIM}/${EXP_FAMILY}/${EXP_NAME}"

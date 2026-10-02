@@ -6,10 +6,10 @@
 set -euo pipefail
 EXP="${1:?usage: run_experiment_training_2D.sh <exp_name> [fold]}"
 FOLD="${2:-0}"
-cd "$(dirname "$0")"; source paths.sh
-CFG="experiments/2D/${EXP}.json"
-[ -f "$CFG" ] || { echo "ERROR: no config $CFG (see experiments/2D/)"; exit 1; }
-eval "$("$PY" experiments/load_config.py "$CFG" | tr -d '\r')"
+cd "$(dirname "$0")/.."; source paths.sh
+CFG="2D_workspace/experiments/${EXP}.json"
+[ -f "$CFG" ] || { echo "ERROR: no config $CFG (see 2D_workspace/experiments/)"; exit 1; }
+eval "$("$PY" helpers/load_config.py "$CFG" | tr -d '\r')"
 export NNUNET_EXP_CONFIG="$TRAINER_CONFIG_PATH"
 export nnUNet_results="$PROJECT_ROOT/nnUNet_data/nnUNet_results/${EXP_DIM}/${EXP_FAMILY}/${EXP_NAME}"
 mkdir -p "$nnUNet_results"

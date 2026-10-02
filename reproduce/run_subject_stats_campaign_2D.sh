@@ -23,7 +23,7 @@
 #   README.txt                                     provenance of this run
 set -euo pipefail
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
-cd "$(dirname "$0")"; source paths.sh
+cd "$(dirname "$0")/.."; source paths.sh
 PR="$nnUNet_results/paper_results/2D"
 
 # name | -experiment string (drives on-the-fly preprocessing!) | legacy model subpath under $PR
