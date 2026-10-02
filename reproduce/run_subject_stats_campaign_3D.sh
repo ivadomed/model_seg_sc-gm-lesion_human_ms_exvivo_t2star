@@ -12,7 +12,7 @@
 #   stats/stats__<table>.csv                    paired variant-vs-base3d tests (Holm/BH)
 set -euo pipefail
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
-cd "$(dirname "$0")"; source paths.sh
+cd "$(dirname "$0")/.."; source paths.sh
 P3="$nnUNet_results/paper_results/3D"
 TR="nnUnet3DCustomTrainer__nnUNetPlans__3d_fullres"
 

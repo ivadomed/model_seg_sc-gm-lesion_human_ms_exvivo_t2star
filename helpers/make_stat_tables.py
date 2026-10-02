@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Build the revision's subject-level tables (markdown) from the by_subject/ + stats/ CSVs produced by
-run_subject_stats_campaign_{2D,3D}.sh. Per config: per-subject mean +/- std and 95% CI (t, N=12),
+reproduce/run_subject_stats_campaign_{2D,3D}.sh. Per config: per-subject mean +/- std and 95% CI (t, N=12),
 and Delta vs baseline with paired Wilcoxon (Holm-corrected). Unit = subject (spinal cord).
 
   python -m helpers.make_stat_tables --root outputs/subject_stats_2D --baseline base --out TABLE.md

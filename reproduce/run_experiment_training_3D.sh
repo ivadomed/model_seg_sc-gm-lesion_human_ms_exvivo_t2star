@@ -6,10 +6,10 @@
 set -euo pipefail
 EXP="${1:?usage: run_experiment_training_3D.sh <exp_name> [fold]}"
 FOLD="${2:-0}"
-cd "$(dirname "$0")"; source paths.sh         # REPO_DIR, PROJECT_ROOT, PY, NNUNET_BIN, nnUNet_*, CLEAN_DATASET
-CFG="experiments/3D/${EXP}.json"
-[ -f "$CFG" ] || { echo "ERROR: no config $CFG (see experiments/3D/)"; exit 1; }
-eval "$("$PY" experiments/load_config.py "$CFG" | tr -d '\r')"
+cd "$(dirname "$0")/.."; source paths.sh         # REPO_DIR, PROJECT_ROOT, PY, NNUNET_BIN, nnUNet_*, CLEAN_DATASET
+CFG="3D_workspace/experiments/${EXP}.json"
+[ -f "$CFG" ] || { echo "ERROR: no config $CFG (see 3D_workspace/experiments/)"; exit 1; }
+eval "$("$PY" helpers/load_config.py "$CFG" | tr -d '\r')"
 export NNUNET_EXP_CONFIG="$TRAINER_CONFIG_PATH"
 export nnUNet_results="$PROJECT_ROOT/nnUNet_data/nnUNet_results/${EXP_DIM}/${EXP_FAMILY}/${EXP_NAME}"
 mkdir -p "$nnUNet_results"
@@ -27,7 +27,7 @@ echo "    results -> $nnUNet_results"
 PYTHONPATH="$REPO_DIR" "$PY" -m helpers.make_splits --dataset-dir "$DS_RAW" --canonical "$REPO_DIR/splits/subject_split_3D.json" --inject
 cp "$DS_RAW/splits_final.json" "$DS_PP/splits_final.json"
 # 3b) optional patch-size variant (collapsed patch sweep), reusing the same preprocessing
-[ -n "${PATCH_SIZE:-}" ] && { PLANS=$("$PY" experiments/make_patch_plans.py "$DS_PP" "$PLANS" "$CONFIGURATION" "$PATCH_SIZE" | tr -d '\r'); echo "[patch] plans=$PLANS ($PATCH_SIZE)"; }
+[ -n "${PATCH_SIZE:-}" ] && { PLANS=$("$PY" helpers/make_patch_plans.py "$DS_PP" "$PLANS" "$CONFIGURATION" "$PATCH_SIZE" | tr -d '\r'); echo "[patch] plans=$PLANS ($PATCH_SIZE)"; }
 # 4) train
 echo "[train] nnUNetv2_train $DATASET_ID $CONFIGURATION $FOLD -tr $TRAINER -p $PLANS"
 "$NNUNET_BIN/nnUNetv2_train" "$DATASET_ID" "$CONFIGURATION" "$FOLD" -tr "$TRAINER" -p "$PLANS" --npz

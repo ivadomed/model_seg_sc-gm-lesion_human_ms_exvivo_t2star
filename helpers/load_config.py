@@ -5,7 +5,7 @@ Also writes the trainer_config sub-dict to a temp file and prints its path (for
 $NNUNET_EXP_CONFIG, consumed by the custom trainers).
 
 Usage (inside a runner):
-    eval "$(.venv/bin/python experiments/load_config.py experiments/3D/adamw_baseline.json)"
+    eval "$(.venv/bin/python helpers/load_config.py 3D_workspace/experiments/adamw_baseline.json)"
 """
 import json, os, sys, tempfile
 

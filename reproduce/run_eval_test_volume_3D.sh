@@ -14,7 +14,7 @@
 #
 # NOTE: all compute must run under set_slot (GPU/CPU/RAM allocation on this machine).
 set -euo pipefail
-cd "$(dirname "$0")"; source paths.sh
+cd "$(dirname "$0")/.."; source paths.sh
 
 FOLDS="0 1 2 3"; TTA=""; RESTORE=0; LIMIT=0
 GPU=0; SHARD_IDX=-1; SHARD_N=1                 # multi-GPU sharding (see run_eval_test_volume_3D_parallel.sh)

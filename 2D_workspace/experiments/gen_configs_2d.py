@@ -3,7 +3,7 @@
 debug.json). Trainer-config experiments share Dataset021 (mag+phase, label-mode all); channel/
 label-scheme experiments use their own base dataset. Hand-authored winning.json is left as-is."""
 import json, os
-D = os.path.join(os.path.dirname(__file__), "2D")
+D = os.path.dirname(__file__)
 DS21 = {"id": 21, "name": "2D_MagPhase", "channels": "mag_phase", "label_mode": "all"}
 
 # edge_params variants as defined in nnUNetTrainerWandb.on_train_start (default == variant 2)

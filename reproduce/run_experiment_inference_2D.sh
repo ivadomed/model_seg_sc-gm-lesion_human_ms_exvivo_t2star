@@ -14,8 +14,8 @@ shift 2
 for a in "$@"; do case "$a" in
   --tta) TTA="--use_tta";; --single-fold) FOLDS="0"; ENS="fold0";;
   --legacy) LEGACY=1;; --*) echo "unknown flag $a"; exit 1;; *) INPUT="$a";; esac; done
-cd "$(dirname "$0")"; source paths.sh
-eval "$("$PY" experiments/load_config.py "experiments/2D/${EXP}.json" | tr -d '\r')"
+cd "$(dirname "$0")/.."; source paths.sh
+eval "$("$PY" helpers/load_config.py "2D_workspace/experiments/${EXP}.json" | tr -d '\r')"
 DS="Dataset$(printf %03d "$DATASET_ID")_${DATASET_NAME}"
 
 if [ -n "$LEGACY" ]; then

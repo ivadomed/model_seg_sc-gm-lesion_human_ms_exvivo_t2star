@@ -4,14 +4,14 @@ Generate the experiment config JSONs (documents the experiment matrix in one pla
 3D experiments share Dataset011 (mag+phase) and vary only trainer_config, EXCEPT channel
 variants which use their own base dataset. The 3D trainer enforces exactly ONE active EXP_*
 flag, so each non-baseline config turns the baseline's spatial-aug off and its own flag on.
-Idempotent: rewrites experiments/{2D,3D}/*.json (hand-authored baseline/sgd/winning kept).
+Idempotent: rewrites this directory's *.json (hand-authored baseline/sgd/winning kept).
 """
 import json, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def w(dim, name, cfg):
     cfg.setdefault("dim", dim)
-    p = os.path.join(HERE, dim, f"{name}.json")
+    p = os.path.join(HERE, f"{name}.json")
     json.dump(cfg, open(p, "w"), indent=2)
     print("  wrote", os.path.relpath(p, os.path.dirname(HERE)))
 

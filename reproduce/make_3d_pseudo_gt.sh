@@ -8,7 +8,7 @@
 # NOTE: per-slice CPU-bound (~minutes/volume); verified correct (fg-Dice ~0.99 vs stored pseudo_labels_3d).
 set -euo pipefail
 MODEL="${1:?usage: make_3d_pseudo_gt.sh <2d_model_folder> [out_dir] [subjects...]}"
-cd "$(dirname "$0")"; source paths.sh
+cd "$(dirname "$0")/.."; source paths.sh
 OUT="${2:-$OUTPUTS/pseudo_gt_3d}"
 shift || true; shift || true
 mkdir -p "$OUT"
